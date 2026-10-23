@@ -90,10 +90,19 @@ app.use((err, req, res, next) => {
 });
 
 // ─── Start Server ─────────────────────────────────────────────────────────────
-app.listen(PORT, () => {
-  console.log(`🚀 AulaCheck corriendo en http://localhost:${PORT}`);
-  console.log(`📚 Universidad Veracruzana - Sistema de Aulas Híbridas`);
-  console.log(`🌍 Entorno: ${process.env.NODE_ENV || 'development'}`);
-});
+const initDb = require('./src/config/initDb');
+
+initDb()
+  .then(() => {
+    app.listen(PORT, () => {
+      console.log(`🚀 AulaCheck corriendo en http://localhost:${PORT}`);
+      console.log(`📚 Universidad Veracruzana - Sistema de Aulas Híbridas`);
+      console.log(`🌍 Entorno: ${process.env.NODE_ENV || 'development'}`);
+    });
+  })
+  .catch(err => {
+    console.error('❌ Error al inicializar la base de datos:', err.message);
+    process.exit(1);
+  });
 
 module.exports = app;
