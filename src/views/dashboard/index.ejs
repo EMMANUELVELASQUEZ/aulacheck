@@ -1,0 +1,230 @@
+<%- include('../layouts/main_top') %>
+
+<!-- Page Header -->
+<div class="d-flex align-items-center justify-content-between mb-4">
+  <div>
+    <h1 class="h3 fw-bold mb-1">Dashboard</h1>
+    <p class="text-muted mb-0">
+      Bienvenido, <strong><%= user.nombre %></strong> —
+      <% if (user.rol === 'admin') { %>
+        <span class="badge bg-danger">Administrador</span>
+      <% } else if (user.rol === 'tecnico') { %>
+        <span class="badge bg-warning text-dark">Técnico</span>
+      <% } else { %>
+        <span class="badge bg-info text-dark">Docente</span>
+      <% } %>
+    </p>
+  </div>
+  <div class="d-flex gap-2">
+    <a href="/diagnostico" class="btn btn-uv">
+      <i class="bi bi-clipboard-check me-1"></i>Diagnóstico
+    </a>
+    <a href="/incidencias/nueva" class="btn btn-outline-secondary">
+      <i class="bi bi-plus me-1"></i>Reportar Falla
+    </a>
+  </div>
+</div>
+
+<!-- Stats Cards -->
+<div class="row g-4 mb-4">
+  <div class="col-sm-6 col-xl-3">
+    <div class="card stat-card border-0 shadow-sm h-100">
+      <div class="card-body">
+        <div class="d-flex align-items-center justify-content-between">
+          <div>
+            <p class="text-muted small mb-1 fw-semibold text-uppercase">Aulas Activas</p>
+            <h2 class="fw-bold mb-0"><%= stats.total_aulas %></h2>
+          </div>
+          <div class="stat-icon bg-primary bg-opacity-10 text-primary">
+            <i class="bi bi-building"></i>
+          </div>
+        </div>
+        <div class="mt-2">
+          <a href="/admin/aulas" class="text-decoration-none text-muted small">
+            Ver todas <i class="bi bi-arrow-right"></i>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-sm-6 col-xl-3">
+    <div class="card stat-card border-0 shadow-sm h-100">
+      <div class="card-body">
+        <div class="d-flex align-items-center justify-content-between">
+          <div>
+            <p class="text-muted small mb-1 fw-semibold text-uppercase">Incidencias Pendientes</p>
+            <h2 class="fw-bold mb-0 <%= stats.pendientes > 0 ? 'text-danger' : 'text-success' %>">
+              <%= stats.pendientes %>
+            </h2>
+          </div>
+          <div class="stat-icon bg-danger bg-opacity-10 text-danger">
+            <i class="bi bi-exclamation-triangle"></i>
+          </div>
+        </div>
+        <div class="mt-2">
+          <a href="/incidencias?estado=pendiente" class="text-decoration-none text-muted small">
+            Ver pendientes <i class="bi bi-arrow-right"></i>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-sm-6 col-xl-3">
+    <div class="card stat-card border-0 shadow-sm h-100">
+      <div class="card-body">
+        <div class="d-flex align-items-center justify-content-between">
+          <div>
+            <p class="text-muted small mb-1 fw-semibold text-uppercase">Resueltas Este Mes</p>
+            <h2 class="fw-bold mb-0 text-success"><%= stats.resueltas %></h2>
+          </div>
+          <div class="stat-icon bg-success bg-opacity-10 text-success">
+            <i class="bi bi-check-circle"></i>
+          </div>
+        </div>
+        <div class="mt-2">
+          <a href="/incidencias?estado=resuelto" class="text-decoration-none text-muted small">
+            Ver resueltas <i class="bi bi-arrow-right"></i>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-sm-6 col-xl-3">
+    <div class="card stat-card border-0 shadow-sm h-100">
+      <div class="card-body">
+        <div class="d-flex align-items-center justify-content-between">
+          <div>
+            <p class="text-muted small mb-1 fw-semibold text-uppercase">Total Equipos</p>
+            <h2 class="fw-bold mb-0"><%= stats.total_equipos %></h2>
+          </div>
+          <div class="stat-icon bg-warning bg-opacity-10 text-warning">
+            <i class="bi bi-cpu"></i>
+          </div>
+        </div>
+        <div class="mt-2">
+          <span class="text-muted small">En todas las aulas</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Recent Incidents + Quick Actions -->
+<div class="row g-4">
+  <div class="col-lg-8">
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-transparent d-flex align-items-center justify-content-between py-3">
+        <h5 class="mb-0 fw-bold"><i class="bi bi-clock-history me-2 text-uv"></i>Incidencias Recientes</h5>
+        <a href="/incidencias" class="btn btn-sm btn-outline-secondary">Ver todas</a>
+      </div>
+      <div class="card-body p-0">
+        <% if (recentIncidencias.length === 0) { %>
+          <div class="text-center py-5 text-muted">
+            <i class="bi bi-inbox fs-1 d-block mb-2 opacity-25"></i>
+            <p>No hay incidencias recientes</p>
+          </div>
+        <% } else { %>
+        <div class="table-responsive">
+          <table class="table table-hover mb-0 align-middle">
+            <thead class="table-light">
+              <tr>
+                <th class="ps-3">#</th>
+                <th>Aula</th>
+                <th>Equipo</th>
+                <th>Prioridad</th>
+                <th>Estado</th>
+                <th>Fecha</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              <% recentIncidencias.forEach(inc => { %>
+              <tr>
+                <td class="ps-3 fw-semibold">#<%= inc.id %></td>
+                <td><%= inc.aula_nombre || 'N/A' %></td>
+                <td>
+                  <% if (inc.equipo_tipo) { %>
+                    <span class="equipo-badge equipo-<%= inc.equipo_tipo %>">
+                      <%= inc.equipo_tipo %>
+                    </span>
+                  <% } else { %>
+                    <span class="text-muted small">General</span>
+                  <% } %>
+                </td>
+                <td>
+                  <span class="badge prioridad-<%= inc.prioridad %>"><%= inc.prioridad %></span>
+                </td>
+                <td>
+                  <span class="badge estado-<%= inc.estado %>"><%= inc.estado.replace('_', ' ') %></span>
+                </td>
+                <td class="text-muted small">
+                  <%= new Date(inc.fecha_creacion).toLocaleDateString('es-MX', {day:'2-digit',month:'short'}) %>
+                </td>
+                <td>
+                  <a href="/incidencias/<%= inc.id %>" class="btn btn-sm btn-outline-secondary">
+                    <i class="bi bi-eye"></i>
+                  </a>
+                </td>
+              </tr>
+              <% }); %>
+            </tbody>
+          </table>
+        </div>
+        <% } %>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-4">
+    <!-- Quick Actions -->
+    <div class="card border-0 shadow-sm mb-4">
+      <div class="card-header bg-transparent py-3">
+        <h5 class="mb-0 fw-bold"><i class="bi bi-lightning me-2 text-warning"></i>Acciones Rápidas</h5>
+      </div>
+      <div class="card-body">
+        <div class="d-grid gap-2">
+          <a href="/diagnostico" class="btn btn-uv">
+            <i class="bi bi-clipboard-check me-2"></i>Iniciar Diagnóstico
+          </a>
+          <a href="/incidencias/nueva" class="btn btn-outline-danger">
+            <i class="bi bi-plus-circle me-2"></i>Reportar Incidencia
+          </a>
+          <a href="/incidencias" class="btn btn-outline-secondary">
+            <i class="bi bi-list-ul me-2"></i>Ver Incidencias
+          </a>
+          <% if (isTecnico || isAdmin) { %>
+          <a href="/estadisticas" class="btn btn-outline-info">
+            <i class="bi bi-bar-chart me-2"></i>Ver Estadísticas
+          </a>
+          <% } %>
+        </div>
+      </div>
+    </div>
+
+    <!-- Status Summary -->
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-transparent py-3">
+        <h5 class="mb-0 fw-bold"><i class="bi bi-pie-chart me-2 text-info"></i>Resumen</h5>
+      </div>
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <span class="text-muted">Pendientes</span>
+          <span class="badge bg-secondary fs-6"><%= stats.pendientes %></span>
+        </div>
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <span class="text-muted">En Proceso</span>
+          <span class="badge bg-primary fs-6"><%= stats.en_proceso %></span>
+        </div>
+        <div class="d-flex justify-content-between align-items-center">
+          <span class="text-muted">Resueltas (mes)</span>
+          <span class="badge bg-success fs-6"><%= stats.resueltas %></span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%- include('../layouts/main_bottom') %>

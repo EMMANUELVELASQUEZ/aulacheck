@@ -1,0 +1,106 @@
+<div class="sidebar" id="sidebar">
+  <div class="sidebar-inner">
+    <!-- Navigation -->
+    <nav class="sidebar-nav">
+      <div class="sidebar-section-label">PRINCIPAL</div>
+      <ul class="sidebar-menu">
+        <li>
+          <a href="/dashboard" class="sidebar-link <%= locals.title && title.includes('Dashboard') ? 'active' : '' %>">
+            <i class="bi bi-speedometer2"></i>
+            <span>Dashboard</span>
+          </a>
+        </li>
+        <li>
+          <a href="/diagnostico" class="sidebar-link <%= locals.title && title.includes('Diagnóstico') ? 'active' : '' %>">
+            <i class="bi bi-clipboard-check"></i>
+            <span>Diagnóstico</span>
+          </a>
+        </li>
+      </ul>
+
+      <div class="sidebar-section-label mt-3">INCIDENCIAS</div>
+      <ul class="sidebar-menu">
+        <% if (isDocente) { %>
+        <li>
+          <a href="/incidencias" class="sidebar-link <%= locals.title && title.includes('Incidencias') ? 'active' : '' %>">
+            <i class="bi bi-exclamation-triangle"></i>
+            <span>Mis Incidencias</span>
+          </a>
+        </li>
+        <li>
+          <a href="/incidencias/nueva" class="sidebar-link">
+            <i class="bi bi-plus-circle"></i>
+            <span>Reportar Falla</span>
+          </a>
+        </li>
+        <% } else { %>
+        <li>
+          <a href="/incidencias" class="sidebar-link <%= locals.title && title.includes('Incidencias') ? 'active' : '' %>">
+            <i class="bi bi-exclamation-triangle"></i>
+            <span>Todas las Incidencias</span>
+          </a>
+        </li>
+        <li>
+          <a href="/incidencias?estado=pendiente" class="sidebar-link">
+            <i class="bi bi-clock-history"></i>
+            <span>Pendientes</span>
+          </a>
+        </li>
+        <li>
+          <a href="/incidencias?estado=en_proceso" class="sidebar-link">
+            <i class="bi bi-gear"></i>
+            <span>En Proceso</span>
+          </a>
+        </li>
+        <% } %>
+      </ul>
+
+      <% if (isTecnico || isAdmin) { %>
+      <div class="sidebar-section-label mt-3">REPORTES</div>
+      <ul class="sidebar-menu">
+        <li>
+          <a href="/estadisticas" class="sidebar-link <%= locals.title && title.includes('Estadísticas') ? 'active' : '' %>">
+            <i class="bi bi-bar-chart-line"></i>
+            <span>Estadísticas</span>
+          </a>
+        </li>
+      </ul>
+      <% } %>
+
+      <% if (isAdmin) { %>
+      <div class="sidebar-section-label mt-3">ADMINISTRACIÓN</div>
+      <ul class="sidebar-menu">
+        <li>
+          <a href="/admin" class="sidebar-link <%= locals.title && title.includes('Administración') && !title.includes('Usuarios') && !title.includes('Aulas') ? 'active' : '' %>">
+            <i class="bi bi-shield-check"></i>
+            <span>Panel Admin</span>
+          </a>
+        </li>
+        <li>
+          <a href="/admin/usuarios" class="sidebar-link <%= locals.title && title.includes('Usuarios') ? 'active' : '' %>">
+            <i class="bi bi-people"></i>
+            <span>Usuarios</span>
+          </a>
+        </li>
+        <li>
+          <a href="/admin/aulas" class="sidebar-link <%= locals.title && title.includes('Aulas') ? 'active' : '' %>">
+            <i class="bi bi-building"></i>
+            <span>Aulas</span>
+          </a>
+        </li>
+      </ul>
+      <% } %>
+    </nav>
+
+    <!-- Sidebar Footer -->
+    <div class="sidebar-footer">
+      <a href="/auth/logout" class="sidebar-link text-danger">
+        <i class="bi bi-box-arrow-right"></i>
+        <span>Cerrar Sesión</span>
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- Sidebar overlay for mobile -->
+<div class="sidebar-overlay" id="sidebarOverlay"></div>

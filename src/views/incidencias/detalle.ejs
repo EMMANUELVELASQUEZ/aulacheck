@@ -1,0 +1,247 @@
+<%- include('../layouts/main_top') %>
+
+<div class="d-flex align-items-center justify-content-between mb-4">
+  <div>
+    <h1 class="h3 fw-bold mb-1">Incidencia <span class="text-uv">#<%= incidencia.id %></span></h1>
+    <p class="text-muted mb-0">
+      Reportada por <strong><%= incidencia.usuario_nombre %></strong> el
+      <%= new Date(incidencia.fecha_creacion).toLocaleDateString('es-MX', {day:'2-digit',month:'long',year:'numeric'}) %>
+    </p>
+  </div>
+  <a href="/incidencias" class="btn btn-outline-secondary btn-sm">
+    <i class="bi bi-arrow-left me-1"></i>Volver
+  </a>
+</div>
+
+<div class="row g-4">
+  <!-- Main Incident Info -->
+  <div class="col-lg-8">
+    <div class="card border-0 shadow-sm mb-4">
+      <div class="card-header bg-transparent d-flex align-items-center justify-content-between py-3">
+        <h5 class="mb-0 fw-bold"><i class="bi bi-info-circle me-2 text-uv"></i>Detalles de la Incidencia</h5>
+        <div class="d-flex gap-2">
+          <span class="badge prioridad-<%= incidencia.prioridad %> fs-6">
+            <% if (incidencia.prioridad === 'critica') { %><i class="bi bi-fire me-1"></i><% } %>
+            <%= incidencia.prioridad %>
+          </span>
+          <span class="badge estado-<%= incidencia.estado %> fs-6">
+            <%= incidencia.estado.replace('_', ' ') %>
+          </span>
+        </div>
+      </div>
+      <div class="card-body p-4">
+        <div class="row g-3 mb-4">
+          <div class="col-sm-6">
+            <label class="form-label fw-semibold text-muted small text-uppercase">Aula</label>
+            <div class="d-flex align-items-center gap-2">
+              <i class="bi bi-building text-primary"></i>
+              <span class="fw-semibold"><%= incidencia.aula_nombre || 'No especificada' %></span>
+            </div>
+            <% if (incidencia.edificio) { %>
+              <small class="text-muted"><%= incidencia.edificio %></small>
+            <% } %>
+          </div>
+          <div class="col-sm-6">
+            <label class="form-label fw-semibold text-muted small text-uppercase">Equipo Afectado</label>
+            <% if (incidencia.equipo_tipo) { %>
+              <div>
+                <span class="equipo-badge equipo-<%= incidencia.equipo_tipo %>">
+                  <%= incidencia.equipo_nombre || incidencia.equipo_tipo %>
+                </span>
+              </div>
+            <% } else { %>
+              <span class="text-muted">Sin equipo específico</span>
+            <% } %>
+          </div>
+          <div class="col-sm-6">
+            <label class="form-label fw-semibold text-muted small text-uppercase">Reportado Por</label>
+            <div><%= incidencia.usuario_nombre %></div>
+            <small class="text-muted"><%= incidencia.usuario_email %></small>
+          </div>
+          <div class="col-sm-6">
+            <label class="form-label fw-semibold text-muted small text-uppercase">Última Actualización</label>
+            <div><%= new Date(incidencia.fecha_actualizacion).toLocaleDateString('es-MX', {day:'2-digit',month:'long',year:'numeric',hour:'2-digit',minute:'2-digit'}) %></div>
+          </div>
+        </div>
+
+        <div class="mb-4">
+          <label class="form-label fw-semibold text-muted small text-uppercase">Descripción del Problema</label>
+          <div class="bg-light rounded-3 p-3">
+            <p class="mb-0" style="white-space:pre-wrap"><%= incidencia.descripcion %></p>
+          </div>
+        </div>
+
+        <% if (incidencia.solucion) { %>
+        <div>
+          <label class="form-label fw-semibold text-muted small text-uppercase">Solución Aplicada</label>
+          <div class="bg-success bg-opacity-10 border border-success border-opacity-25 rounded-3 p-3">
+            <p class="mb-0 text-success" style="white-space:pre-wrap">
+              <i class="bi bi-check-circle me-2"></i><%= incidencia.solucion %>
+            </p>
+          </div>
+        </div>
+        <% } %>
+      </div>
+    </div>
+
+    <!-- Timeline of Seguimientos -->
+    <div class="card border-0 shadow-sm mb-4">
+      <div class="card-header bg-transparent py-3">
+        <h5 class="mb-0 fw-bold"><i class="bi bi-clock-history me-2 text-uv"></i>Historial de Seguimiento</h5>
+      </div>
+      <div class="card-body p-4">
+        <% if (seguimientos.length === 0) { %>
+          <div class="text-center py-3 text-muted">
+            <i class="bi bi-chat-left-dots d-block fs-1 opacity-25 mb-2"></i>
+            <p class="mb-0 small">Sin notas de seguimiento aún</p>
+          </div>
+        <% } else { %>
+        <div class="timeline">
+          <!-- Original report -->
+          <div class="timeline-item">
+            <div class="timeline-dot bg-uv"></div>
+            <div class="timeline-content">
+              <div class="d-flex justify-content-between align-items-start mb-1">
+                <div>
+                  <strong><%= incidencia.usuario_nombre %></strong>
+                  <span class="badge bg-info text-dark ms-2 small">Docente</span>
+                </div>
+                <small class="text-muted">
+                  <%= new Date(incidencia.fecha_creacion).toLocaleDateString('es-MX', {day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}) %>
+                </small>
+              </div>
+              <p class="mb-0 text-muted small bg-light rounded p-2">
+                <i class="bi bi-flag me-1"></i>Incidencia reportada: "<%= incidencia.descripcion.substring(0, 100) %>..."
+              </p>
+            </div>
+          </div>
+
+          <% seguimientos.forEach(seg => { %>
+          <div class="timeline-item">
+            <div class="timeline-dot <%= seg.estado_nuevo === 'resuelto' ? 'bg-success' : seg.estado_nuevo === 'en_proceso' ? 'bg-primary' : 'bg-secondary' %>"></div>
+            <div class="timeline-content">
+              <div class="d-flex justify-content-between align-items-start mb-1">
+                <div>
+                  <strong><%= seg.usuario_nombre || 'Usuario' %></strong>
+                  <% if (seg.usuario_rol === 'tecnico') { %>
+                    <span class="badge bg-warning text-dark ms-2 small">Técnico</span>
+                  <% } else if (seg.usuario_rol === 'admin') { %>
+                    <span class="badge bg-danger ms-2 small">Admin</span>
+                  <% } else { %>
+                    <span class="badge bg-info text-dark ms-2 small">Docente</span>
+                  <% } %>
+                  <% if (seg.estado_nuevo) { %>
+                    <span class="badge estado-<%= seg.estado_nuevo %> ms-1 small"><%= seg.estado_nuevo.replace('_',' ') %></span>
+                  <% } %>
+                </div>
+                <small class="text-muted">
+                  <%= new Date(seg.fecha).toLocaleDateString('es-MX', {day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}) %>
+                </small>
+              </div>
+              <p class="mb-0 small"><%= seg.comentario %></p>
+            </div>
+          </div>
+          <% }); %>
+        </div>
+        <% } %>
+      </div>
+    </div>
+
+    <!-- Add Followup Note -->
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-transparent py-3">
+        <h5 class="mb-0 fw-bold"><i class="bi bi-chat-left-text me-2 text-uv"></i>Agregar Nota</h5>
+      </div>
+      <div class="card-body p-4">
+        <form action="/incidencias/<%= incidencia.id %>/seguimiento" method="POST">
+          <div class="mb-3">
+            <textarea class="form-control" name="comentario" rows="3"
+              placeholder="Escribe una nota de seguimiento..." required minlength="3"></textarea>
+          </div>
+          <div class="d-flex justify-content-end">
+            <button type="submit" class="btn btn-uv">
+              <i class="bi bi-chat-left-dots me-2"></i>Agregar Nota
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sidebar: Update Status (tecnico/admin only) -->
+  <div class="col-lg-4">
+    <% if (isTecnico || isAdmin) { %>
+    <div class="card border-0 shadow-sm mb-4">
+      <div class="card-header bg-transparent py-3">
+        <h5 class="mb-0 fw-bold"><i class="bi bi-gear me-2 text-warning"></i>Actualizar Incidencia</h5>
+      </div>
+      <div class="card-body p-4">
+        <form action="/incidencias/<%= incidencia.id %>?_method=PUT" method="POST">
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Estado</label>
+            <select class="form-select" name="estado">
+              <option value="pendiente" <%= incidencia.estado === 'pendiente' ? 'selected' : '' %>>Pendiente</option>
+              <option value="en_proceso" <%= incidencia.estado === 'en_proceso' ? 'selected' : '' %>>En Proceso</option>
+              <option value="resuelto" <%= incidencia.estado === 'resuelto' ? 'selected' : '' %>>Resuelto</option>
+              <option value="cancelado" <%= incidencia.estado === 'cancelado' ? 'selected' : '' %>>Cancelado</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Prioridad</label>
+            <select class="form-select" name="prioridad">
+              <option value="baja" <%= incidencia.prioridad === 'baja' ? 'selected' : '' %>>Baja</option>
+              <option value="media" <%= incidencia.prioridad === 'media' ? 'selected' : '' %>>Media</option>
+              <option value="alta" <%= incidencia.prioridad === 'alta' ? 'selected' : '' %>>Alta</option>
+              <option value="critica" <%= incidencia.prioridad === 'critica' ? 'selected' : '' %>>Crítica</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Solución (si está resuelto)</label>
+            <textarea class="form-control" name="solucion" rows="3"
+              placeholder="Describe la solución aplicada..."><%= incidencia.solucion || '' %></textarea>
+          </div>
+          <div class="d-grid">
+            <button type="submit" class="btn btn-warning fw-semibold">
+              <i class="bi bi-save me-2"></i>Actualizar
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+    <% } %>
+
+    <!-- Incident Summary Card -->
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-transparent py-3">
+        <h5 class="mb-0 fw-bold"><i class="bi bi-card-text me-2"></i>Resumen</h5>
+      </div>
+      <div class="card-body">
+        <dl class="row mb-0 small">
+          <dt class="col-5 text-muted">ID</dt>
+          <dd class="col-7 fw-semibold">#<%= incidencia.id %></dd>
+          <dt class="col-5 text-muted">Prioridad</dt>
+          <dd class="col-7"><span class="badge prioridad-<%= incidencia.prioridad %>"><%= incidencia.prioridad %></span></dd>
+          <dt class="col-5 text-muted">Estado</dt>
+          <dd class="col-7"><span class="badge estado-<%= incidencia.estado %>"><%= incidencia.estado.replace('_',' ') %></span></dd>
+          <dt class="col-5 text-muted">Aula</dt>
+          <dd class="col-7"><%= incidencia.aula_nombre || '—' %></dd>
+          <dt class="col-5 text-muted">Equipo</dt>
+          <dd class="col-7"><%= incidencia.equipo_tipo || '—' %></dd>
+          <dt class="col-5 text-muted">Seguimientos</dt>
+          <dd class="col-7"><%= seguimientos.length %></dd>
+        </dl>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+.timeline { position: relative; padding-left: 28px; }
+.timeline::before { content: ''; position: absolute; left: 8px; top: 0; bottom: 0; width: 2px; background: #dee2e6; }
+.timeline-item { position: relative; margin-bottom: 24px; }
+.timeline-dot { position: absolute; left: -24px; top: 4px; width: 16px; height: 16px; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 0 2px #dee2e6; }
+.timeline-content { padding-bottom: 8px; }
+.bg-uv { background-color: #006633 !important; }
+</style>
+
+<%- include('../layouts/main_bottom') %>

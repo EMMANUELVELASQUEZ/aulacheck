@@ -1,0 +1,90 @@
+<%- include('../layouts/main_top') %>
+
+<div class="d-flex align-items-center justify-content-between mb-4">
+  <div>
+    <h1 class="h3 fw-bold mb-1"><i class="bi bi-building text-uv me-2"></i>Aulas</h1>
+    <p class="text-muted mb-0"><%= aulas.length %> aula(s) registrada(s)</p>
+  </div>
+  <a href="/admin/aulas/nueva" class="btn btn-uv">
+    <i class="bi bi-building-add me-2"></i>Nueva Aula
+  </a>
+</div>
+
+<div class="card border-0 shadow-sm">
+  <div class="card-body p-0">
+    <% if (aulas.length === 0) { %>
+      <div class="text-center py-5 text-muted">
+        <i class="bi bi-building display-1 opacity-25 d-block mb-3"></i>
+        <p>No hay aulas registradas</p>
+        <a href="/admin/aulas/nueva" class="btn btn-uv">Registrar Primera Aula</a>
+      </div>
+    <% } else { %>
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead class="table-light">
+          <tr>
+            <th class="ps-3" style="width:50px">#</th>
+            <th>Nombre</th>
+            <th>Edificio / Piso</th>
+            <th>Capacidad</th>
+            <th>Equipos</th>
+            <th>Estado</th>
+            <th style="width:120px">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% aulas.forEach(aula => { %>
+          <tr>
+            <td class="ps-3 text-muted small"><%= aula.id %></td>
+            <td>
+              <div class="fw-semibold"><%= aula.nombre %></div>
+              <% if (aula.descripcion) { %>
+                <small class="text-muted d-block text-truncate" style="max-width:200px">
+                  <%= aula.descripcion %>
+                </small>
+              <% } %>
+            </td>
+            <td class="text-muted">
+              <%= aula.edificio || '—' %>
+              <% if (aula.piso) { %><br><small>Piso <%= aula.piso %></small><% } %>
+            </td>
+            <td>
+              <% if (aula.capacidad) { %>
+                <i class="bi bi-people text-muted me-1"></i><%= aula.capacidad %>
+              <% } else { %>
+                <span class="text-muted">—</span>
+              <% } %>
+            </td>
+            <td>
+              <div class="d-flex align-items-center gap-2">
+                <span class="badge bg-primary"><%= aula.total_equipos || 0 %> equipos</span>
+                <% if (aula.equipos_falla > 0) { %>
+                  <span class="badge bg-danger"><%= aula.equipos_falla %> fallas</span>
+                <% } %>
+              </div>
+            </td>
+            <td>
+              <span class="badge <%= aula.activa ? 'bg-success' : 'bg-secondary' %>">
+                <%= aula.activa ? 'Activa' : 'Inactiva' %>
+              </span>
+            </td>
+            <td>
+              <div class="d-flex gap-1">
+                <a href="/admin/aulas/<%= aula.id %>/edit" class="btn btn-sm btn-outline-primary" title="Editar">
+                  <i class="bi bi-pencil"></i>
+                </a>
+                <a href="/incidencias?aula_id=<%= aula.id %>" class="btn btn-sm btn-outline-secondary" title="Ver incidencias">
+                  <i class="bi bi-exclamation-triangle"></i>
+                </a>
+              </div>
+            </td>
+          </tr>
+          <% }); %>
+        </tbody>
+      </table>
+    </div>
+    <% } %>
+  </div>
+</div>
+
+<%- include('../layouts/main_bottom') %>

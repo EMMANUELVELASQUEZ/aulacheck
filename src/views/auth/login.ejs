@@ -1,0 +1,131 @@
+<%- include('../layouts/auth_top') %>
+
+<div class="min-vh-100 d-flex align-items-center justify-content-center py-5">
+  <div class="w-100" style="max-width: 420px;">
+    <!-- Logo & Branding -->
+    <div class="text-center mb-4">
+      <div class="d-inline-flex align-items-center justify-content-center bg-white rounded-circle mb-3" style="width:80px;height:80px;box-shadow:0 4px 20px rgba(0,0,0,0.3)">
+        <i class="bi bi-display-fill text-uv" style="font-size:2rem;color:#006633;"></i>
+      </div>
+      <h1 class="text-white fw-bold mb-0">AulaCheck</h1>
+      <p class="text-white-50 mb-0">Universidad Veracruzana</p>
+    </div>
+
+    <!-- Flash Messages -->
+    <% if (locals.success_msg && success_msg.length > 0) { %>
+      <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="bi bi-check-circle-fill me-2"></i><%= success_msg[0] %>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      </div>
+    <% } %>
+    <% if (locals.error_msg && error_msg.length > 0) { %>
+      <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="bi bi-exclamation-triangle-fill me-2"></i><%= error_msg[0] %>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      </div>
+    <% } %>
+    <% if (locals.info_msg && info_msg.length > 0) { %>
+      <div class="alert alert-info alert-dismissible fade show" role="alert">
+        <i class="bi bi-info-circle-fill me-2"></i><%= info_msg[0] %>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      </div>
+    <% } %>
+
+    <!-- Login Card -->
+    <div class="card shadow-lg border-0 rounded-4">
+      <div class="card-body p-4">
+        <h4 class="card-title fw-bold mb-1">Iniciar Sesión</h4>
+        <p class="text-muted small mb-4">Ingresa tus credenciales institucionales</p>
+
+        <form action="/auth/login" method="POST" novalidate id="loginForm">
+          <div class="mb-3">
+            <label for="email" class="form-label fw-semibold">Correo Electrónico</label>
+            <div class="input-group">
+              <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+              <input type="email" class="form-control" id="email" name="email"
+                placeholder="correo@uv.mx" required autocomplete="email">
+            </div>
+          </div>
+          <div class="mb-3">
+            <label for="password" class="form-label fw-semibold">Contraseña</label>
+            <div class="input-group">
+              <span class="input-group-text"><i class="bi bi-lock"></i></span>
+              <input type="password" class="form-control" id="password" name="password"
+                placeholder="••••••••" required autocomplete="current-password">
+              <button class="btn btn-outline-secondary" type="button" id="togglePwd">
+                <i class="bi bi-eye" id="togglePwdIcon"></i>
+              </button>
+            </div>
+          </div>
+
+          <div class="d-grid mt-4">
+            <button type="submit" class="btn btn-uv btn-lg fw-semibold">
+              <i class="bi bi-box-arrow-in-right me-2"></i>Iniciar Sesión
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Demo credentials -->
+    <div class="card mt-3 border-0 rounded-4" style="background: rgba(255,255,255,0.1);">
+      <div class="card-body p-3">
+        <p class="text-white-75 small mb-2 fw-semibold"><i class="bi bi-info-circle me-1"></i>Credenciales de prueba:</p>
+        <div class="row g-1">
+          <div class="col-12">
+            <button class="btn btn-sm btn-outline-light w-100 text-start py-1 demo-login-btn"
+              data-email="admin@uv.mx" data-pass="Admin123!">
+              <i class="bi bi-shield-check text-warning me-2"></i>
+              <span class="small">Admin: admin@uv.mx / Admin123!</span>
+            </button>
+          </div>
+          <div class="col-12">
+            <button class="btn btn-sm btn-outline-light w-100 text-start py-1 demo-login-btn"
+              data-email="docente1@uv.mx" data-pass="Docente123!">
+              <i class="bi bi-person-badge text-info me-2"></i>
+              <span class="small">Docente: docente1@uv.mx / Docente123!</span>
+            </button>
+          </div>
+          <div class="col-12">
+            <button class="btn btn-sm btn-outline-light w-100 text-start py-1 demo-login-btn"
+              data-email="tecnico@uv.mx" data-pass="Tecnico123!">
+              <i class="bi bi-tools text-success me-2"></i>
+              <span class="small">Técnico: tecnico@uv.mx / Tecnico123!</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="text-center mt-3">
+      <a href="/" class="text-white-50 small text-decoration-none">
+        <i class="bi bi-arrow-left me-1"></i>Volver al inicio
+      </a>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Toggle password visibility
+  document.getElementById('togglePwd').addEventListener('click', function() {
+    const pwd = document.getElementById('password');
+    const icon = document.getElementById('togglePwdIcon');
+    if (pwd.type === 'password') {
+      pwd.type = 'text';
+      icon.className = 'bi bi-eye-slash';
+    } else {
+      pwd.type = 'password';
+      icon.className = 'bi bi-eye';
+    }
+  });
+
+  // Demo login buttons
+  document.querySelectorAll('.demo-login-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+      document.getElementById('email').value = this.dataset.email;
+      document.getElementById('password').value = this.dataset.pass;
+    });
+  });
+</script>
+
+<%- include('../layouts/auth_bottom') %>
