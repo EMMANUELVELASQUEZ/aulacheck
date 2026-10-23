@@ -92,17 +92,28 @@ app.use((err, req, res, next) => {
 // ─── Start Server ─────────────────────────────────────────────────────────────
 const initDb = require('./src/config/initDb');
 
-initDb()
-  .then(() => {
-    app.listen(PORT, () => {
-      console.log(`🚀 AulaCheck corriendo en http://localhost:${PORT}`);
-      console.log(`📚 Universidad Veracruzana - Sistema de Aulas Híbridas`);
-      console.log(`🌍 Entorno: ${process.env.NODE_ENV || 'development'}`);
-    });
-  })
-  .catch(err => {
-    console.error('❌ Error al inicializar la base de datos:', err.message);
-    process.exit(1);
-  });
+// Levanta el servidor inmediatamente para que Railway detecte el puerto
+app.listen(PORT, () => {
+  console.log(`🚀 AulaCheck corriendo en http://localhost:${PORT}`);
+  console.log(`📚 Universidad Veracruzana - Sistema de Aulas Híbridas`);
+  console.log(`🌍 Entorno: ${process.env.NODE_ENV || 'development'}`);
+});
+
+// Inicializa la base de datos con reintentos en background
+async function initWithRetry(attempts = 10, delay = 5000) {
+  for (let i = 1; i <= attempts; i++) {
+    try {
+      await initDb();
+      console.log('✅ Base de datos lista');
+      return;
+    } catch (err) {
+      console.error(`⚠️  DB intento ${i}/${attempts}: ${err.message}`);
+      if (i < attempts) await new Promise(r => setTimeout(r, delay));
+    }
+  }
+  console.error('❌ No se pudo conectar a la base de datos después de varios intentos');
+}
+
+initWithRetry();
 
 module.exports = app;
