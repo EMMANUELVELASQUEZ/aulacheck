@@ -17,16 +17,7 @@ app.set('trust proxy', 1);
 // ── Security Headers ──────────────────────────────────────────────────────────
 app.use(
   helmet({
-    contentSecurityPolicy: {
-      directives: {
-        defaultSrc: ["'self'"],
-        styleSrc: ["'self'", "'unsafe-inline'", 'https://cdn.jsdelivr.net'],
-        scriptSrc: ["'self'", "'unsafe-inline'", 'https://cdn.jsdelivr.net', 'https://cdn.jsdelivr.net'],
-        fontSrc: ["'self'", 'https://cdn.jsdelivr.net'],
-        imgSrc: ["'self'", 'data:', 'https:'],
-        connectSrc: ["'self'"],
-      },
-    },
+    contentSecurityPolicy: false,   // CSP inline puede romper CDNs; se configura por separado si se necesita
     crossOriginEmbedderPolicy: false,
   })
 );

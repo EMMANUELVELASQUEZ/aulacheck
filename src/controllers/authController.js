@@ -52,21 +52,13 @@ const postLogin = async (req, res) => {
     await authService.updateLastLogin(user.id, ip);
     await authService.logAuthEvent(user.id, 'login_success', ip);
 
-    // Regenerate session to prevent session fixation attacks
-    req.session.regenerate((err) => {
-      if (err) {
-        console.error('Session regeneration error:', err);
-        req.flash('error', 'Error de sesión. Por favor intenta de nuevo.');
-        return res.redirect('/auth/login');
-      }
-      req.session.user = { id: user.id, nombre: user.nombre, email: user.email, rol: user.rol };
-      req.flash('success', `Bienvenido de vuelta, ${user.nombre.split(' ')[0]}.`);
-      switch (user.rol) {
-        case 'admin': return res.redirect('/admin');
-        case 'tecnico': return res.redirect('/incidencias');
-        default: return res.redirect('/dashboard');
-      }
-    });
+    req.session.user = { id: user.id, nombre: user.nombre, email: user.email, rol: user.rol };
+    req.flash('success', `Bienvenido de vuelta, ${user.nombre.split(' ')[0]}.`);
+    switch (user.rol) {
+      case 'admin': return res.redirect('/admin');
+      case 'tecnico': return res.redirect('/incidencias');
+      default: return res.redirect('/dashboard');
+    }
   } catch (err) {
     console.error('Error en login:', err);
     req.flash('error', 'Error interno del servidor. Por favor intenta de nuevo.');
