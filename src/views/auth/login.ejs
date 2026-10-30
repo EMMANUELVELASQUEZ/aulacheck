@@ -1,402 +1,502 @@
 <%- include('../layouts/auth_top') %>
 
 <style>
-  html, body { height: 100%; margin: 0; background: #fff; }
+  *, *::before, *::after { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; background: #fff; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif; }
 
-  /* ── Split Panel ─────────────────────────────────── */
-  .auth-wrap { display: flex; min-height: 100vh; }
+  /* ── Layout ───────────────────────────────────────────────── */
+  .lw { display: flex; min-height: 100vh; }
 
-  .auth-left {
-    width: 55%;
-    background: linear-gradient(160deg, #002d16 0%, #004d26 35%, #006633 65%, #007a3d 100%);
+  /* ── Left Panel ───────────────────────────────────────────── */
+  .lw-left {
+    width: 46%;
+    background: #010f07;
+    background-image:
+      radial-gradient(ellipse 60% 50% at 80% 10%, rgba(0,120,55,0.35) 0%, transparent 70%),
+      radial-gradient(ellipse 50% 60% at 10% 90%, rgba(0,70,30,0.25) 0%, transparent 70%);
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    padding: 3rem 3.5rem;
+    padding: 2.75rem 3rem;
     position: relative;
     overflow: hidden;
   }
-  .auth-left::before {
-    content: '';
-    position: absolute;
-    top: -120px; right: -120px;
-    width: 380px; height: 380px;
-    border-radius: 50%;
-    background: rgba(255,255,255,0.04);
-    pointer-events: none;
-  }
-  .auth-left::after {
-    content: '';
-    position: absolute;
-    bottom: -140px; left: -80px;
-    width: 460px; height: 460px;
-    border-radius: 50%;
-    background: rgba(255,255,255,0.03);
-    pointer-events: none;
-  }
-  .auth-left-inner { position: relative; z-index: 1; }
 
-  .auth-right {
-    width: 45%;
+  /* Decorative ring */
+  .lw-left::after {
+    content: '';
+    position: absolute;
+    right: -160px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 420px;
+    height: 420px;
+    border-radius: 50%;
+    border: 1px solid rgba(0,140,60,0.15);
+    pointer-events: none;
+  }
+  .lw-left::before {
+    content: '';
+    position: absolute;
+    right: -110px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 280px;
+    height: 280px;
+    border-radius: 50%;
+    border: 1px solid rgba(0,140,60,0.1);
+    pointer-events: none;
+  }
+
+  /* Brand mark */
+  .lw-mark {
+    width: 44px; height: 44px;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 2.5rem;
+  }
+  .lw-mark i { font-size: 1.25rem; color: rgba(255,255,255,0.9); }
+
+  /* Brand name */
+  .lw-brand-name {
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: -0.02em;
+    line-height: 1;
+    margin-bottom: 0.35rem;
+  }
+  .lw-brand-sub {
+    font-size: 0.78rem;
+    color: rgba(255,255,255,0.35);
+    letter-spacing: 0.02em;
+    margin-bottom: 3rem;
+  }
+
+  /* Tagline */
+  .lw-tagline {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #fff;
+    line-height: 1.2;
+    letter-spacing: -0.03em;
+    max-width: 300px;
+    margin-bottom: 0.75rem;
+  }
+  .lw-tagline span {
+    color: rgba(0,255,100,0.55);
+  }
+  .lw-desc {
+    font-size: 0.88rem;
+    color: rgba(255,255,255,0.45);
+    line-height: 1.65;
+    max-width: 290px;
+    margin-bottom: 2.5rem;
+  }
+
+  /* Feature list */
+  .lw-features { list-style: none; padding: 0; margin: 0 0 3rem; }
+  .lw-features li {
+    display: flex; align-items: center; gap: 10px;
+    padding: 6px 0;
+    font-size: 0.85rem;
+    color: rgba(255,255,255,0.6);
+  }
+  .lw-dot {
+    width: 6px; height: 6px; min-width: 6px;
+    border-radius: 50%;
+    background: rgba(0,255,100,0.4);
+  }
+
+  /* Footer */
+  .lw-footer {
+    font-size: 0.72rem;
+    color: rgba(255,255,255,0.18);
+    letter-spacing: 0.02em;
+  }
+
+  /* ── Right Panel ──────────────────────────────────────────── */
+  .lw-right {
+    width: 54%;
+    background: #fff;
     display: flex;
     align-items: center;
     justify-content: center;
     padding: 3rem 2.5rem;
-    background: #fff;
   }
-  .auth-form-box { width: 100%; max-width: 400px; }
 
-  /* ── Feature List ────────────────────────────────── */
-  .feat-list { list-style: none; padding: 0; margin: 0; }
-  .feat-list li {
-    display: flex; align-items: center; gap: 12px;
-    padding: 7px 0;
-    color: rgba(255,255,255,0.82);
-    font-size: 0.93rem;
+  .lw-form-box {
+    width: 100%;
+    max-width: 400px;
   }
-  .feat-icon {
-    width: 22px; height: 22px; min-width: 22px;
-    border-radius: 50%;
-    background: rgba(255,255,255,0.12);
-    border: 1.5px solid rgba(255,255,255,0.25);
-    display: flex; align-items: center; justify-content: center;
-  }
-  .feat-icon i { font-size: 0.65rem; color: rgba(255,255,255,0.9); }
 
-  /* ── Stats Row ───────────────────────────────────── */
-  .stat-pill { display: flex; flex-direction: column; }
-  .stat-pill .val { color: #fff; font-size: 1.4rem; font-weight: 700; line-height: 1; }
-  .stat-pill .lbl { color: rgba(255,255,255,0.45); font-size: 0.75rem; margin-top: 2px; }
-  .stat-divider { width: 1px; background: rgba(255,255,255,0.15); align-self: stretch; }
+  /* Form heading */
+  .lw-heading {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: #0c0f0d;
+    letter-spacing: -0.025em;
+    line-height: 1.2;
+    margin-bottom: 0.5rem;
+  }
+  .lw-subheading {
+    font-size: 0.875rem;
+    color: #64748b;
+    line-height: 1.5;
+    margin-bottom: 2rem;
+  }
 
-  /* ── Form Inputs ─────────────────────────────────── */
-  .auth-label {
-    font-size: 0.72rem; font-weight: 700; letter-spacing: 0.06em;
-    text-transform: uppercase; color: #64748b; margin-bottom: 6px;
+  /* Alerts */
+  .lw-alert {
+    display: flex; align-items: flex-start; gap: 10px;
+    padding: 10px 14px;
+    border-radius: 10px;
+    font-size: 0.85rem;
+    line-height: 1.45;
+    margin-bottom: 1.25rem;
   }
-  .auth-ig .input-group-text {
-    height: 46px;
-    border: 1.5px solid #e2e8f0; border-right: none;
-    border-radius: 10px 0 0 10px;
-    background: #f8fafc; color: #94a3b8;
-    transition: border-color 0.2s;
+  .lw-alert-error { background: #fff1f2; color: #be123c; }
+  .lw-alert-success { background: #f0fdf4; color: #15803d; }
+  .lw-alert-info { background: #eff6ff; color: #1d4ed8; }
+  .lw-alert i { margin-top: 2px; flex-shrink: 0; }
+
+  /* Fields */
+  .lw-field { margin-bottom: 1.25rem; }
+  .lw-label {
+    display: block;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    color: #475569;
+    margin-bottom: 6px;
   }
-  .auth-ig .form-control {
-    height: 46px;
-    border: 1.5px solid #e2e8f0; border-left: none;
-    border-radius: 0 10px 10px 0;
+  .lw-input-wrap { position: relative; }
+  .lw-icon {
+    position: absolute;
+    left: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #94a3b8;
     font-size: 0.95rem;
-    transition: border-color 0.2s, box-shadow 0.2s;
-  }
-  .auth-ig .form-control:focus {
-    border-color: #006633;
-    box-shadow: 0 0 0 3px rgba(0,102,51,0.1);
-  }
-  .auth-ig:focus-within .input-group-text { border-color: #006633; }
-  .auth-ig .btn-eye {
-    height: 46px;
-    border: 1.5px solid #e2e8f0; border-left: none;
-    border-radius: 0 10px 10px 0;
-    background: #f8fafc; color: #94a3b8;
+    pointer-events: none;
     transition: color 0.15s;
   }
-  .auth-ig .btn-eye:hover { color: #006633; }
-  .auth-ig:focus-within .btn-eye { border-color: #006633; }
-
-  /* ── Submit Button ───────────────────────────────── */
-  .btn-signin {
-    height: 46px;
-    background: linear-gradient(135deg, #005229 0%, #008844 100%);
-    border: none; border-radius: 10px;
-    color: #fff; font-weight: 600; font-size: 0.97rem;
-    letter-spacing: 0.02em;
-    transition: all 0.2s;
-  }
-  .btn-signin:hover {
-    background: linear-gradient(135deg, #004d26 0%, #006633 100%);
-    color: #fff;
-    transform: translateY(-1px);
-    box-shadow: 0 6px 20px rgba(0,102,51,0.28);
-  }
-  .btn-signin:active { transform: translateY(0); box-shadow: none; }
-  .btn-signin:disabled { opacity: 0.75; cursor: not-allowed; transform: none; }
-
-  /* ── Demo Credentials ────────────────────────────── */
-  .demo-box {
-    background: #f8fafc;
-    border: 1px solid #e2e8f0;
-    border-radius: 10px;
-    padding: 14px;
-  }
-  .demo-pill {
-    display: flex; align-items: center; gap: 10px;
+  .lw-input {
+    width: 100%;
+    height: 50px;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 11px;
+    padding: 0 14px 0 42px;
+    font-size: 0.93rem;
+    color: #0c0f0d;
     background: #fff;
-    border: 1px solid #e2e8f0;
+    outline: none;
+    transition: border-color 0.18s, box-shadow 0.18s;
+    -webkit-appearance: none;
+  }
+  .lw-input:focus {
+    border-color: #006633;
+    box-shadow: 0 0 0 3px rgba(0,102,51,0.09);
+  }
+  .lw-input:focus + .lw-icon,
+  .lw-input-wrap:focus-within .lw-icon { color: #006633; }
+  .lw-input::placeholder { color: #c4cdd8; }
+
+  /* Eye toggle */
+  .lw-eye {
+    position: absolute;
+    right: 13px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: #94a3b8;
+    cursor: pointer;
+    padding: 4px;
+    line-height: 1;
+    transition: color 0.15s;
+  }
+  .lw-eye:hover { color: #475569; }
+  .lw-input.has-eye { padding-right: 42px; }
+
+  /* Submit button */
+  .lw-btn {
+    width: 100%;
+    height: 50px;
+    background: #006633;
+    border: none;
+    border-radius: 11px;
+    color: #fff;
+    font-size: 0.95rem;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    cursor: pointer;
+    transition: background 0.18s, transform 0.1s, box-shadow 0.18s;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    margin-top: 1.5rem;
+    margin-bottom: 0.5rem;
+  }
+  .lw-btn:hover:not(:disabled) {
+    background: #005229;
+    box-shadow: 0 6px 20px rgba(0,102,51,0.22);
+    transform: translateY(-1px);
+  }
+  .lw-btn:active:not(:disabled) { transform: translateY(0); box-shadow: none; }
+  .lw-btn:disabled { opacity: 0.65; cursor: not-allowed; }
+  .lw-btn .spinner {
+    width: 18px; height: 18px;
+    border: 2px solid rgba(255,255,255,0.3);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Divider */
+  .lw-divider {
+    display: flex; align-items: center; gap: 12px;
+    margin: 1.5rem 0 1.25rem;
+  }
+  .lw-divider::before, .lw-divider::after {
+    content: ''; flex: 1; height: 1px; background: #f1f5f9;
+  }
+  .lw-divider span {
+    font-size: 0.72rem; color: #94a3b8; letter-spacing: 0.05em; white-space: nowrap;
+  }
+
+  /* Demo section */
+  .lw-demo-label {
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: #94a3b8;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .lw-demo-pills {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .lw-demo-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 14px;
+    background: #f8fafc;
+    border: 1.5px solid #e2e8f0;
     border-radius: 8px;
-    padding: 8px 12px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: #374151;
     cursor: pointer;
     transition: all 0.15s;
-    text-align: left; width: 100%;
-    font-size: 0.83rem; color: #374151;
+    white-space: nowrap;
   }
-  .demo-pill:hover {
+  .lw-demo-pill:hover {
+    background: #f0fdf4;
     border-color: #006633;
-    background: #f0fff5;
     color: #003d1f;
   }
-  .demo-pill .role { font-weight: 600; }
-  .demo-pill .mail { color: #94a3b8; font-size: 0.78rem; }
+  .lw-demo-pill i { font-size: 0.9rem; }
 
-  /* ── Divider ─────────────────────────────────────── */
-  .auth-divider {
-    display: flex; align-items: center; gap: 12px;
-    color: #cbd5e1; font-size: 0.78rem; margin: 1.25rem 0;
+  /* Back link */
+  .lw-back {
+    display: block;
+    text-align: center;
+    margin-top: 2rem;
+    font-size: 0.8rem;
+    color: #94a3b8;
+    text-decoration: none;
+    transition: color 0.15s;
   }
-  .auth-divider::before, .auth-divider::after {
-    content: ''; flex: 1; height: 1px; background: #e2e8f0;
-  }
+  .lw-back:hover { color: #475569; }
 
-  /* ── Mobile ──────────────────────────────────────── */
-  @media (max-width: 991.98px) {
-    .auth-left { display: none !important; }
-    .auth-right {
+  /* ── Mobile ───────────────────────────────────────────────── */
+  @media (max-width: 991px) {
+    .lw-left { display: none !important; }
+    .lw-right {
       width: 100%;
-      background: linear-gradient(160deg, #002d16, #006633);
+      background: linear-gradient(160deg, #010f07 0%, #002d14 100%);
       align-items: flex-start;
-      padding: 2rem 1rem;
-      min-height: 100vh;
+      padding: 2rem 1.25rem 3rem;
     }
-    .auth-form-box {
-      max-width: 430px; margin: 1.5rem auto;
-      background: #fff; border-radius: 16px;
+    .lw-form-box {
+      max-width: 420px;
+      margin: 1.5rem auto 0;
+      background: #fff;
+      border-radius: 18px;
       padding: 2rem 1.75rem;
-      box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+      box-shadow: 0 24px 64px rgba(0,0,0,0.3);
     }
+    .lw-back { color: #475569; }
   }
 </style>
 
-<div class="auth-wrap">
+<div class="lw">
 
-  <!-- ────────────────── Left Panel: Branding ────────────────── -->
-  <div class="auth-left d-none d-lg-flex flex-column auth-left-inner">
-
-    <!-- Brand -->
+  <!-- ── Left: Branding ─────────────────────────────────────── -->
+  <div class="lw-left d-none d-lg-flex flex-column">
     <div>
-      <div class="d-flex align-items-center gap-3 mb-5">
-        <div class="d-flex align-items-center justify-content-center rounded-3"
-             style="width:46px;height:46px;background:rgba(255,255,255,0.13);">
-          <i class="bi bi-display-fill text-white" style="font-size:1.25rem;"></i>
-        </div>
-        <div>
-          <div class="text-white fw-bold" style="font-size:1.25rem;line-height:1.1;">AulaCheck</div>
-          <div style="color:rgba(255,255,255,0.45);font-size:0.78rem;">Universidad Veracruzana</div>
-        </div>
+      <div class="lw-mark">
+        <i class="bi bi-display-fill"></i>
       </div>
+      <div class="lw-brand-name">AulaCheck</div>
+      <div class="lw-brand-sub">Universidad Veracruzana</div>
 
-      <h2 class="text-white fw-bold mb-2" style="font-size:1.75rem;line-height:1.25;max-width:360px;">
-        Gestión de Aulas Híbridas
-      </h2>
-      <p class="mb-5" style="color:rgba(255,255,255,0.6);font-size:0.95rem;max-width:340px;line-height:1.6;">
-        Plataforma centralizada para el diagnóstico y seguimiento de equipos audiovisuales en aulas de la UV.
+      <div class="lw-tagline">Aulas<br>híbridas<br><span>bajo control.</span></div>
+      <p class="lw-desc">
+        Plataforma centralizada para diagnóstico, seguimiento y resolución de fallas en aulas equipadas de la UV.
       </p>
 
-      <ul class="feat-list mb-5">
-        <li>
-          <div class="feat-icon"><i class="bi bi-check2"></i></div>
-          Diagnóstico guiado de equipos por aula
-        </li>
-        <li>
-          <div class="feat-icon"><i class="bi bi-check2"></i></div>
-          Registro y seguimiento de incidencias
-        </li>
-        <li>
-          <div class="feat-icon"><i class="bi bi-check2"></i></div>
-          Estadísticas y reportes en tiempo real
-        </li>
-        <li>
-          <div class="feat-icon"><i class="bi bi-check2"></i></div>
-          Control de acceso por roles
-        </li>
-        <li>
-          <div class="feat-icon"><i class="bi bi-check2"></i></div>
-          Historial completo de mantenimiento
-        </li>
+      <ul class="lw-features">
+        <li><div class="lw-dot"></div>Diagnóstico guiado de equipos</li>
+        <li><div class="lw-dot"></div>Registro y seguimiento de incidencias</li>
+        <li><div class="lw-dot"></div>Estadísticas y reportes en tiempo real</li>
+        <li><div class="lw-dot"></div>Roles diferenciados por perfil</li>
       </ul>
-
-      <!-- Stats -->
-      <div class="d-flex align-items-center gap-4">
-        <div class="stat-pill">
-          <span class="val">5+</span>
-          <span class="lbl">Aulas registradas</span>
-        </div>
-        <div class="stat-divider"></div>
-        <div class="stat-pill">
-          <span class="val">3</span>
-          <span class="lbl">Roles de usuario</span>
-        </div>
-        <div class="stat-divider"></div>
-        <div class="stat-pill">
-          <span class="val">24/7</span>
-          <span class="lbl">Disponibilidad</span>
-        </div>
-      </div>
     </div>
 
-    <!-- Footer -->
-    <div style="color:rgba(255,255,255,0.3);font-size:0.75rem;">
-      &copy; 2025 Universidad Veracruzana &middot; AulaCheck v2.0
-    </div>
+    <div class="lw-footer">AulaCheck v2.0 &nbsp;&middot;&nbsp; Universidad Veracruzana &nbsp;&middot;&nbsp; 2025</div>
   </div>
 
-  <!-- ────────────────── Right Panel: Form ───────────────────── -->
-  <div class="auth-right">
-    <div class="auth-form-box">
+  <!-- ── Right: Form ────────────────────────────────────────── -->
+  <div class="lw-right">
+    <div class="lw-form-box">
 
-      <!-- Mobile logo (hidden on lg+) -->
+      <!-- Mobile logo -->
       <div class="d-lg-none text-center mb-4">
-        <div class="d-inline-flex align-items-center justify-content-center rounded-3 mb-3"
-             style="width:52px;height:52px;background:linear-gradient(135deg,#005229,#008844);">
+        <div class="d-inline-flex align-items-center gap-2 mb-1">
           <i class="bi bi-display-fill text-white" style="font-size:1.3rem;"></i>
+          <span class="text-white fw-bold" style="font-size:1.3rem;letter-spacing:-0.02em;">AulaCheck</span>
         </div>
-        <h1 class="fw-bold mb-0" style="font-size:1.5rem;color:#1a1a2e;">AulaCheck</h1>
-        <p class="text-muted small">Universidad Veracruzana</p>
+        <div style="color:rgba(255,255,255,0.4);font-size:0.78rem;">Universidad Veracruzana</div>
       </div>
 
-      <!-- Heading -->
-      <div class="mb-4">
-        <h2 class="fw-bold mb-1" style="font-size:1.5rem;color:#1a1a2e;">Iniciar Sesión</h2>
-        <p class="text-muted mb-0" style="font-size:0.88rem;">
-          Ingresa tus credenciales institucionales para continuar.
-        </p>
-      </div>
+      <h1 class="lw-heading">Iniciar sesión</h1>
+      <p class="lw-subheading">Ingresa tus credenciales institucionales para continuar.</p>
 
-      <!-- Flash Messages -->
-      <% if (locals.success_msg && success_msg.length > 0) { %>
-        <div class="alert d-flex align-items-start gap-2 py-2 mb-4 border-0"
-             style="background:#ecfdf5;color:#065f46;border-radius:10px;" role="alert">
-          <i class="bi bi-check-circle-fill mt-1 flex-shrink-0"></i>
-          <span style="font-size:0.88rem;"><%= success_msg[0] %></span>
+      <!-- Alerts -->
+      <% if (locals.error_msg && error_msg.length > 0) { %>
+        <div class="lw-alert lw-alert-error">
+          <i class="bi bi-exclamation-circle-fill"></i>
+          <span><%= error_msg[0] %></span>
         </div>
       <% } %>
-      <% if (locals.error_msg && error_msg.length > 0) { %>
-        <div class="alert d-flex align-items-start gap-2 py-2 mb-4 border-0"
-             style="background:#fef2f2;color:#991b1b;border-radius:10px;" role="alert">
-          <i class="bi bi-exclamation-triangle-fill mt-1 flex-shrink-0"></i>
-          <span style="font-size:0.88rem;"><%= error_msg[0] %></span>
+      <% if (locals.success_msg && success_msg.length > 0) { %>
+        <div class="lw-alert lw-alert-success">
+          <i class="bi bi-check-circle-fill"></i>
+          <span><%= success_msg[0] %></span>
         </div>
       <% } %>
       <% if (locals.info_msg && info_msg.length > 0) { %>
-        <div class="alert d-flex align-items-start gap-2 py-2 mb-4 border-0"
-             style="background:#eff6ff;color:#1e40af;border-radius:10px;" role="alert">
-          <i class="bi bi-info-circle-fill mt-1 flex-shrink-0"></i>
-          <span style="font-size:0.88rem;"><%= info_msg[0] %></span>
+        <div class="lw-alert lw-alert-info">
+          <i class="bi bi-info-circle-fill"></i>
+          <span><%= info_msg[0] %></span>
         </div>
       <% } %>
 
       <!-- Form -->
-      <form action="/auth/login" method="POST" id="loginForm" novalidate>
+      <form id="loginForm" action="/auth/login" method="POST" novalidate>
 
-        <div class="mb-3">
-          <div class="auth-label">Correo Electrónico</div>
-          <div class="input-group auth-ig">
-            <span class="input-group-text"><i class="bi bi-envelope"></i></span>
-            <input type="email" class="form-control" id="email" name="email"
-              placeholder="correo@uv.mx" required autocomplete="email" spellcheck="false">
+        <div class="lw-field">
+          <label class="lw-label" for="email">Correo electrónico</label>
+          <div class="lw-input-wrap">
+            <input
+              class="lw-input"
+              type="email"
+              id="email"
+              name="email"
+              placeholder="correo@uv.mx"
+              autocomplete="email"
+              spellcheck="false"
+              required
+            >
+            <i class="bi bi-envelope lw-icon"></i>
           </div>
         </div>
 
-        <div class="mb-4">
-          <div class="auth-label">Contraseña</div>
-          <div class="input-group auth-ig">
-            <span class="input-group-text"><i class="bi bi-lock"></i></span>
-            <input type="password" class="form-control" id="password" name="password"
-              placeholder="••••••••" required autocomplete="current-password">
-            <button class="btn btn-eye" type="button" id="togglePwd" tabindex="-1">
+        <div class="lw-field">
+          <label class="lw-label" for="password">Contrase&ntilde;a</label>
+          <div class="lw-input-wrap">
+            <input
+              class="lw-input has-eye"
+              type="password"
+              id="password"
+              name="password"
+              placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;"
+              autocomplete="current-password"
+              required
+            >
+            <i class="bi bi-lock lw-icon"></i>
+            <button type="button" class="lw-eye" id="eyeToggle" tabindex="-1" aria-label="Mostrar contrase&ntilde;a">
               <i class="bi bi-eye" id="eyeIcon"></i>
             </button>
           </div>
         </div>
 
-        <button type="submit" class="btn btn-signin w-100 mb-1" id="submitBtn">
-          <span id="btnLabel">
-            <i class="bi bi-box-arrow-in-right me-2"></i>Iniciar Sesión
-          </span>
-          <span id="btnLoading" class="d-none">
-            <span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>
-            Verificando...
-          </span>
+        <button type="submit" class="lw-btn" id="submitBtn">
+          <span id="btnLabel">Iniciar sesión</span>
+          <div id="btnSpinner" class="spinner d-none"></div>
         </button>
 
       </form>
 
-      <!-- Divider -->
-      <div class="auth-divider">acceso demo</div>
+      <!-- Demo credentials -->
+      <div class="lw-divider"><span>acceso demo</span></div>
 
-      <!-- Demo Credentials -->
-      <div class="demo-box">
-        <p class="text-muted mb-2" style="font-size:0.78rem;font-weight:600;">
-          Haz clic para autocompletar:
-        </p>
-        <div class="d-flex flex-column gap-2">
-          <button class="demo-pill" data-email="admin@uv.mx" data-pass="Admin123!" type="button">
-            <i class="bi bi-shield-check" style="color:#dc2626;font-size:1rem;"></i>
-            <div>
-              <div class="role">Administrador</div>
-              <div class="mail">admin@uv.mx</div>
-            </div>
-          </button>
-          <button class="demo-pill" data-email="docente1@uv.mx" data-pass="Docente123!" type="button">
-            <i class="bi bi-person-badge" style="color:#2563eb;font-size:1rem;"></i>
-            <div>
-              <div class="role">Docente</div>
-              <div class="mail">docente1@uv.mx</div>
-            </div>
-          </button>
-          <button class="demo-pill" data-email="tecnico@uv.mx" data-pass="Tecnico123!" type="button">
-            <i class="bi bi-tools" style="color:#16a34a;font-size:1rem;"></i>
-            <div>
-              <div class="role">Técnico</div>
-              <div class="mail">tecnico@uv.mx</div>
-            </div>
-          </button>
-        </div>
+      <div class="lw-demo-label">Clic para autocompletar</div>
+      <div class="lw-demo-pills">
+        <button class="lw-demo-pill" type="button" data-e="admin@uv.mx" data-p="Admin123!">
+          <i class="bi bi-shield-check" style="color:#dc2626;"></i>
+          Administrador
+        </button>
+        <button class="lw-demo-pill" type="button" data-e="docente1@uv.mx" data-p="Docente123!">
+          <i class="bi bi-person-badge" style="color:#2563eb;"></i>
+          Docente
+        </button>
+        <button class="lw-demo-pill" type="button" data-e="tecnico@uv.mx" data-p="Tecnico123!">
+          <i class="bi bi-tools" style="color:#059669;"></i>
+          T&eacute;cnico
+        </button>
       </div>
 
-      <div class="text-center mt-4">
-        <a href="/" class="text-muted text-decoration-none" style="font-size:0.82rem;">
-          <i class="bi bi-arrow-left me-1"></i>Volver al inicio
-        </a>
-      </div>
+      <a href="/" class="lw-back">
+        <i class="bi bi-arrow-left me-1"></i>Volver al inicio
+      </a>
 
     </div>
   </div>
+
 </div>
 
 <script>
-  // Toggle password visibility
-  document.getElementById('togglePwd').addEventListener('click', () => {
-    const pwd = document.getElementById('password');
-    const icon = document.getElementById('eyeIcon');
-    const isHidden = pwd.type === 'password';
-    pwd.type = isHidden ? 'text' : 'password';
-    icon.className = isHidden ? 'bi bi-eye-slash' : 'bi bi-eye';
+  // Eye toggle
+  document.getElementById('eyeToggle').addEventListener('click', function() {
+    var p = document.getElementById('password');
+    var ic = document.getElementById('eyeIcon');
+    var hidden = p.type === 'password';
+    p.type = hidden ? 'text' : 'password';
+    ic.className = hidden ? 'bi bi-eye-slash' : 'bi bi-eye';
   });
 
-  // Demo credential quick-fill
-  document.querySelectorAll('.demo-pill').forEach(btn => {
-    btn.addEventListener('click', function () {
-      document.getElementById('email').value = this.dataset.email;
-      document.getElementById('password').value = this.dataset.pass;
-      document.getElementById('email').focus();
+  // Demo pills
+  document.querySelectorAll('.lw-demo-pill').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      document.getElementById('email').value = this.dataset.e;
+      document.getElementById('password').value = this.dataset.p;
     });
   });
 
-  // Loading state on submit
-  document.getElementById('loginForm').addEventListener('submit', () => {
-    const btn = document.getElementById('submitBtn');
-    document.getElementById('btnLabel').classList.add('d-none');
-    document.getElementById('btnLoading').classList.remove('d-none');
+  // Loading state
+  document.getElementById('loginForm').addEventListener('submit', function() {
+    var btn = document.getElementById('submitBtn');
     btn.disabled = true;
+    document.getElementById('btnLabel').textContent = 'Verificando...';
+    document.getElementById('btnSpinner').classList.remove('d-none');
   });
 </script>
 
