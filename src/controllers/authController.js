@@ -1,5 +1,11 @@
-const bcrypt = require('bcryptjs');
 const pool = require('../config/database');
+const authService = require('../services/authService');
+
+const getClientIp = (req) =>
+  req.headers['x-forwarded-for']?.split(',')[0]?.trim() ||
+  req.ip ||
+  req.connection?.remoteAddress ||
+  'unknown';
 
 // GET /auth/login
 const getLogin = (req, res) => {
@@ -10,52 +16,60 @@ const getLogin = (req, res) => {
 // POST /auth/login
 const postLogin = async (req, res) => {
   const { email, password } = req.body;
-
-  if (!email || !password) {
-    req.flash('error', 'Por favor ingresa tu correo y contraseña.');
-    return res.redirect('/auth/login');
-  }
+  const ip = getClientIp(req);
 
   try {
-    const [rows] = await pool.query(
-      'SELECT * FROM users WHERE email = ? AND activo = TRUE',
-      [email.trim().toLowerCase()]
-    );
+    const user = await authService.findUserByEmail(email);
 
-    if (rows.length === 0) {
-      req.flash('error', 'Correo o contraseña incorrectos.');
+    if (!user) {
+      await authService.logAuthEvent(null, 'login_failed_unknown', ip, email);
+      req.flash('error', 'Credenciales incorrectas. Verifica tu correo y contraseña.');
       return res.redirect('/auth/login');
     }
 
-    const user = rows[0];
-    const match = await bcrypt.compare(password, user.password);
-
-    if (!match) {
-      req.flash('error', 'Correo o contraseña incorrectos.');
+    const locked = await authService.isLocked(user);
+    if (locked) {
+      const minutes = await authService.getLockoutMinutesRemaining(user);
+      await authService.logAuthEvent(user.id, 'login_blocked', ip);
+      req.flash('error', `Cuenta temporalmente bloqueada. Intenta de nuevo en ${minutes} minuto(s).`);
       return res.redirect('/auth/login');
     }
 
-    req.session.user = {
-      id: user.id,
-      nombre: user.nombre,
-      email: user.email,
-      rol: user.rol
-    };
-
-    req.flash('success', `Bienvenido, ${user.nombre}!`);
-
-    // Redirect based on role
-    switch (user.rol) {
-      case 'admin':
-        return res.redirect('/admin');
-      case 'tecnico':
-        return res.redirect('/incidencias');
-      default:
-        return res.redirect('/dashboard');
+    const valid = await authService.verifyPassword(password, user.password);
+    if (!valid) {
+      const { attempts, locked: nowLocked } = await authService.recordFailedAttempt(user.id);
+      await authService.logAuthEvent(user.id, 'login_failed', ip);
+      if (nowLocked) {
+        req.flash('error', 'Demasiados intentos fallidos. Cuenta bloqueada por 30 minutos.');
+      } else {
+        const remaining = Math.max(0, 5 - attempts);
+        req.flash('error', `Credenciales incorrectas. Te quedan ${remaining} intento(s) antes del bloqueo.`);
+      }
+      return res.redirect('/auth/login');
     }
+
+    await authService.resetFailedAttempts(user.id);
+    await authService.updateLastLogin(user.id, ip);
+    await authService.logAuthEvent(user.id, 'login_success', ip);
+
+    // Regenerate session to prevent session fixation attacks
+    req.session.regenerate((err) => {
+      if (err) {
+        console.error('Session regeneration error:', err);
+        req.flash('error', 'Error de sesión. Por favor intenta de nuevo.');
+        return res.redirect('/auth/login');
+      }
+      req.session.user = { id: user.id, nombre: user.nombre, email: user.email, rol: user.rol };
+      req.flash('success', `Bienvenido de vuelta, ${user.nombre.split(' ')[0]}.`);
+      switch (user.rol) {
+        case 'admin': return res.redirect('/admin');
+        case 'tecnico': return res.redirect('/incidencias');
+        default: return res.redirect('/dashboard');
+      }
+    });
   } catch (err) {
     console.error('Error en login:', err);
-    req.flash('error', 'Error interno del servidor. Intenta de nuevo.');
+    req.flash('error', 'Error interno del servidor. Por favor intenta de nuevo.');
     res.redirect('/auth/login');
   }
 };
@@ -63,92 +77,70 @@ const postLogin = async (req, res) => {
 // GET /auth/register
 const getRegister = async (req, res) => {
   try {
-    // Allow register if no admin exists, or if current user is admin
     const [admins] = await pool.query("SELECT id FROM users WHERE rol = 'admin' LIMIT 1");
     const isFirstSetup = admins.length === 0;
-    const isAdminUser = req.session.user && req.session.user.rol === 'admin';
+    const isAdminUser = req.session.user?.rol === 'admin';
 
     if (!isFirstSetup && !isAdminUser) {
-      req.flash('error', 'El registro solo está disponible para administradores.');
+      req.flash('error', 'El registro de usuarios está restringido a administradores.');
       return res.redirect('/auth/login');
     }
 
     res.render('auth/register', {
-      title: 'Registro - AulaCheck',
+      title: 'Registro de Usuario - AulaCheck',
       layout: 'auth',
       isFirstSetup,
-      isAdminUser
+      isAdminUser,
     });
   } catch (err) {
     console.error('Error en getRegister:', err);
-    req.flash('error', 'Error al cargar el formulario de registro.');
+    req.flash('error', 'Error al cargar el formulario.');
     res.redirect('/auth/login');
   }
 };
 
 // POST /auth/register
 const postRegister = async (req, res) => {
-  const { nombre, email, password, confirmar_password, rol } = req.body;
-
-  // Validations
-  if (!nombre || !email || !password || !confirmar_password) {
-    req.flash('error', 'Todos los campos son obligatorios.');
-    return res.redirect('/auth/register');
-  }
-
-  if (password !== confirmar_password) {
-    req.flash('error', 'Las contraseñas no coinciden.');
-    return res.redirect('/auth/register');
-  }
-
-  if (password.length < 6) {
-    req.flash('error', 'La contraseña debe tener al menos 6 caracteres.');
-    return res.redirect('/auth/register');
-  }
+  const { nombre, email, password, rol } = req.body;
+  const ip = getClientIp(req);
 
   try {
-    // Check if email already exists
-    const [existing] = await pool.query('SELECT id FROM users WHERE email = ?', [email.trim().toLowerCase()]);
+    const [existing] = await pool.query('SELECT id FROM users WHERE email = ?', [
+      email.trim().toLowerCase(),
+    ]);
     if (existing.length > 0) {
-      req.flash('error', 'Este correo electrónico ya está registrado.');
+      req.flash('error', 'Este correo electrónico ya está registrado en el sistema.');
       return res.redirect('/auth/register');
     }
 
-    // Determine role
     const [admins] = await pool.query("SELECT id FROM users WHERE rol = 'admin' LIMIT 1");
     const isFirstSetup = admins.length === 0;
-    const isAdminUser = req.session.user && req.session.user.rol === 'admin';
+    const isAdminUser = req.session.user?.rol === 'admin';
 
     let assignedRol = 'docente';
     if (isFirstSetup) assignedRol = 'admin';
-    else if (isAdminUser && rol && ['admin', 'docente', 'tecnico'].includes(rol)) assignedRol = rol;
+    else if (isAdminUser && ['admin', 'docente', 'tecnico'].includes(rol)) assignedRol = rol;
 
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const userId = await authService.createUser({ nombre, email, password, rol: assignedRol });
+    await authService.logAuthEvent(userId, 'user_created', ip, `rol:${assignedRol}`);
 
-    await pool.query(
-      'INSERT INTO users (nombre, email, password, rol) VALUES (?, ?, ?, ?)',
-      [nombre.trim(), email.trim().toLowerCase(), hashedPassword, assignedRol]
-    );
-
-    req.flash('success', 'Usuario registrado exitosamente.');
-
-    if (isAdminUser) {
-      return res.redirect('/admin/usuarios');
-    }
-
-    req.flash('info', 'Ahora puedes iniciar sesión con tus credenciales.');
-    res.redirect('/auth/login');
+    req.flash('success', `Usuario "${nombre.trim()}" registrado correctamente con rol ${assignedRol}.`);
+    return isAdminUser ? res.redirect('/admin/usuarios') : res.redirect('/auth/login');
   } catch (err) {
     console.error('Error en registro:', err);
-    req.flash('error', 'Error al registrar el usuario. Intenta de nuevo.');
+    req.flash('error', 'Error al registrar el usuario. Por favor intenta de nuevo.');
     res.redirect('/auth/register');
   }
 };
 
 // GET /auth/logout
-const logout = (req, res) => {
-  req.session.destroy(err => {
+const logout = async (req, res) => {
+  const userId = req.session.user?.id;
+  const ip = getClientIp(req);
+  req.session.destroy(async (err) => {
     if (err) console.error('Error al cerrar sesión:', err);
+    if (userId) await authService.logAuthEvent(userId, 'logout', ip).catch(() => {});
+    res.clearCookie('ac.sid');
     res.redirect('/auth/login');
   });
 };

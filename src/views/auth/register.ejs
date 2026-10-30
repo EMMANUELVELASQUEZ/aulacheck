@@ -1,98 +1,231 @@
 <%- include('../layouts/auth_top') %>
 
-<div class="min-vh-100 d-flex align-items-center justify-content-center py-5">
-  <div class="w-100" style="max-width: 480px;">
-    <div class="text-center mb-4">
-      <div class="d-inline-flex align-items-center justify-content-center bg-white rounded-circle mb-3" style="width:80px;height:80px;box-shadow:0 4px 20px rgba(0,0,0,0.3)">
-        <i class="bi bi-display-fill" style="font-size:2rem;color:#006633;"></i>
+<style>
+  html, body {
+    min-height: 100%;
+    background: linear-gradient(160deg, #002d16 0%, #004d26 40%, #006633 100%);
+  }
+
+  .register-wrap {
+    min-height: 100vh;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 2.5rem 1rem;
+  }
+
+  .register-card {
+    width: 100%; max-width: 480px;
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+    overflow: hidden;
+  }
+
+  .register-card-header {
+    background: linear-gradient(135deg, #004d26, #006633);
+    padding: 1.5rem 2rem;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .register-card-body { padding: 2rem; }
+
+  .auth-label {
+    font-size: 0.72rem; font-weight: 700; letter-spacing: 0.06em;
+    text-transform: uppercase; color: #64748b; margin-bottom: 6px;
+  }
+
+  .auth-ig .input-group-text {
+    height: 44px;
+    border: 1.5px solid #e2e8f0; border-right: none;
+    border-radius: 10px 0 0 10px;
+    background: #f8fafc; color: #94a3b8;
+    transition: border-color 0.2s;
+  }
+  .auth-ig .form-control,
+  .auth-ig .form-select {
+    height: 44px;
+    border: 1.5px solid #e2e8f0; border-left: none;
+    border-radius: 0 10px 10px 0;
+    font-size: 0.93rem;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .auth-ig .form-control:focus,
+  .auth-ig .form-select:focus {
+    border-color: #006633;
+    box-shadow: 0 0 0 3px rgba(0,102,51,0.1);
+  }
+  .auth-ig:focus-within .input-group-text { border-color: #006633; }
+
+  .btn-register {
+    height: 44px;
+    background: linear-gradient(135deg, #005229 0%, #008844 100%);
+    border: none; border-radius: 10px;
+    color: #fff; font-weight: 600; font-size: 0.95rem;
+    transition: all 0.2s;
+  }
+  .btn-register:hover {
+    background: linear-gradient(135deg, #004d26 0%, #006633 100%);
+    color: #fff;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(0,102,51,0.25);
+  }
+  .btn-register:active { transform: translateY(0); }
+
+  .password-hint {
+    background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 0.78rem; color: #64748b;
+  }
+  .password-hint li { padding: 1px 0; }
+</style>
+
+<div class="register-wrap">
+  <div class="register-card">
+
+    <!-- Card Header -->
+    <div class="register-card-header">
+      <div class="d-flex align-items-center justify-content-center rounded-3"
+           style="width:42px;height:42px;background:rgba(255,255,255,0.15);flex-shrink:0;">
+        <i class="bi bi-person-plus-fill text-white" style="font-size:1.15rem;"></i>
       </div>
-      <h1 class="text-white fw-bold mb-0">AulaCheck</h1>
-      <p class="text-white-50">Universidad Veracruzana</p>
+      <div>
+        <div class="text-white fw-bold" style="font-size:1.1rem;line-height:1.2;">
+          <%= typeof isFirstSetup !== 'undefined' && isFirstSetup
+            ? 'Crear cuenta de administrador'
+            : 'Registrar nuevo usuario' %>
+        </div>
+        <div style="color:rgba(255,255,255,0.5);font-size:0.78rem;">
+          <%= typeof isFirstSetup !== 'undefined' && isFirstSetup
+            ? 'Primera configuración del sistema — AulaCheck'
+            : 'Universidad Veracruzana — AulaCheck' %>
+        </div>
+      </div>
     </div>
 
-    <% if (locals.success_msg && success_msg.length > 0) { %>
-      <div class="alert alert-success alert-dismissible fade show"><i class="bi bi-check-circle-fill me-2"></i><%= success_msg[0] %><button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
-    <% } %>
-    <% if (locals.error_msg && error_msg.length > 0) { %>
-      <div class="alert alert-danger alert-dismissible fade show"><i class="bi bi-exclamation-triangle-fill me-2"></i><%= error_msg[0] %><button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
-    <% } %>
+    <!-- Card Body -->
+    <div class="register-card-body">
 
-    <div class="card shadow-lg border-0 rounded-4">
-      <div class="card-body p-4">
-        <h4 class="card-title fw-bold mb-1">
-          <%= typeof isFirstSetup !== 'undefined' && isFirstSetup ? 'Crear cuenta de administrador' : 'Crear cuenta' %>
-        </h4>
-        <p class="text-muted small mb-4">
-          <%= typeof isFirstSetup !== 'undefined' && isFirstSetup ? 'Primera configuración del sistema' : 'Completa el formulario de registro' %>
-        </p>
+      <!-- Flash Messages -->
+      <% if (locals.success_msg && success_msg.length > 0) { %>
+        <div class="alert d-flex align-items-start gap-2 py-2 mb-4 border-0"
+             style="background:#ecfdf5;color:#065f46;border-radius:10px;" role="alert">
+          <i class="bi bi-check-circle-fill mt-1 flex-shrink-0"></i>
+          <span style="font-size:0.88rem;"><%= success_msg[0] %></span>
+        </div>
+      <% } %>
+      <% if (locals.error_msg && error_msg.length > 0) { %>
+        <div class="alert d-flex align-items-start gap-2 py-2 mb-4 border-0"
+             style="background:#fef2f2;color:#991b1b;border-radius:10px;" role="alert">
+          <i class="bi bi-exclamation-triangle-fill mt-1 flex-shrink-0"></i>
+          <span style="font-size:0.88rem;"><%= error_msg[0] %></span>
+        </div>
+      <% } %>
 
-        <form action="/auth/register" method="POST" novalidate>
-          <div class="mb-3">
-            <label for="nombre" class="form-label fw-semibold">Nombre Completo</label>
-            <div class="input-group">
-              <span class="input-group-text"><i class="bi bi-person"></i></span>
-              <input type="text" class="form-control" id="nombre" name="nombre"
-                placeholder="Ej: Dr. Juan García" required autocomplete="name">
-            </div>
+      <form action="/auth/register" method="POST" novalidate>
+
+        <!-- Nombre -->
+        <div class="mb-3">
+          <div class="auth-label">Nombre Completo</div>
+          <div class="input-group auth-ig">
+            <span class="input-group-text"><i class="bi bi-person"></i></span>
+            <input type="text" class="form-control" name="nombre"
+              placeholder="Ej: Dr. Juan García López" required autocomplete="name">
           </div>
+        </div>
 
-          <div class="mb-3">
-            <label for="email" class="form-label fw-semibold">Correo Electrónico</label>
-            <div class="input-group">
-              <span class="input-group-text"><i class="bi bi-envelope"></i></span>
-              <input type="email" class="form-control" id="email" name="email"
-                placeholder="correo@uv.mx" required autocomplete="email">
-            </div>
+        <!-- Correo -->
+        <div class="mb-3">
+          <div class="auth-label">Correo Electrónico</div>
+          <div class="input-group auth-ig">
+            <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+            <input type="email" class="form-control" name="email"
+              placeholder="correo@uv.mx" required autocomplete="email">
           </div>
+        </div>
 
-          <% if (typeof isAdminUser !== 'undefined' && isAdminUser) { %>
-          <div class="mb-3">
-            <label for="rol" class="form-label fw-semibold">Rol</label>
-            <div class="input-group">
-              <span class="input-group-text"><i class="bi bi-person-badge"></i></span>
-              <select class="form-select" id="rol" name="rol">
-                <option value="docente" selected>Docente</option>
-                <option value="tecnico">Técnico</option>
-                <option value="admin">Administrador</option>
-              </select>
-            </div>
+        <!-- Rol (solo visible para admins) -->
+        <% if (typeof isAdminUser !== 'undefined' && isAdminUser) { %>
+        <div class="mb-3">
+          <div class="auth-label">Rol del Usuario</div>
+          <div class="input-group auth-ig">
+            <span class="input-group-text"><i class="bi bi-person-badge"></i></span>
+            <select class="form-select" name="rol">
+              <option value="docente" selected>Docente</option>
+              <option value="tecnico">Técnico de Soporte</option>
+              <option value="admin">Administrador</option>
+            </select>
           </div>
-          <% } %>
+        </div>
+        <% } %>
 
-          <div class="mb-3">
-            <label for="password" class="form-label fw-semibold">Contraseña</label>
-            <div class="input-group">
-              <span class="input-group-text"><i class="bi bi-lock"></i></span>
-              <input type="password" class="form-control" id="password" name="password"
-                placeholder="Mínimo 6 caracteres" required minlength="6">
-            </div>
-          </div>
-
-          <div class="mb-3">
-            <label for="confirmar_password" class="form-label fw-semibold">Confirmar Contraseña</label>
-            <div class="input-group">
-              <span class="input-group-text"><i class="bi bi-lock-fill"></i></span>
-              <input type="password" class="form-control" id="confirmar_password" name="confirmar_password"
-                placeholder="Repite tu contraseña" required>
-            </div>
-          </div>
-
-          <div class="d-grid mt-4">
-            <button type="submit" class="btn btn-uv btn-lg fw-semibold">
-              <i class="bi bi-person-plus me-2"></i>
-              <%= typeof isFirstSetup !== 'undefined' && isFirstSetup ? 'Crear Cuenta Admin' : 'Registrarse' %>
+        <!-- Contraseña -->
+        <div class="mb-3">
+          <div class="auth-label">Contraseña</div>
+          <div class="input-group auth-ig">
+            <span class="input-group-text"><i class="bi bi-lock"></i></span>
+            <input type="password" class="form-control" id="password" name="password"
+              placeholder="Mínimo 8 caracteres" required>
+            <button class="btn" type="button" id="togglePwd1"
+              style="border:1.5px solid #e2e8f0;border-left:none;border-radius:0 10px 10px 0;height:44px;background:#f8fafc;color:#94a3b8;">
+              <i class="bi bi-eye" id="eyeIcon1"></i>
             </button>
           </div>
-        </form>
-      </div>
-    </div>
+        </div>
 
-    <div class="text-center mt-3">
-      <a href="/auth/login" class="text-white-50 small text-decoration-none">
-        <i class="bi bi-arrow-left me-1"></i>¿Ya tienes cuenta? Inicia sesión
-      </a>
+        <!-- Confirmar contraseña -->
+        <div class="mb-3">
+          <div class="auth-label">Confirmar Contraseña</div>
+          <div class="input-group auth-ig">
+            <span class="input-group-text"><i class="bi bi-lock-fill"></i></span>
+            <input type="password" class="form-control" id="confirm_password" name="confirmar_password"
+              placeholder="Repite la contraseña" required>
+            <button class="btn" type="button" id="togglePwd2"
+              style="border:1.5px solid #e2e8f0;border-left:none;border-radius:0 10px 10px 0;height:44px;background:#f8fafc;color:#94a3b8;">
+              <i class="bi bi-eye" id="eyeIcon2"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Password hints -->
+        <div class="password-hint mb-4">
+          <div class="fw-semibold mb-1" style="color:#475569;">Requisitos de contraseña:</div>
+          <ul class="mb-0 ps-3">
+            <li>Mínimo 8 caracteres</li>
+            <li>Al menos una letra mayúscula</li>
+            <li>Al menos un número</li>
+          </ul>
+        </div>
+
+        <button type="submit" class="btn btn-register w-100">
+          <i class="bi bi-person-check me-2"></i>
+          <%= typeof isFirstSetup !== 'undefined' && isFirstSetup ? 'Crear Cuenta Admin' : 'Registrar Usuario' %>
+        </button>
+
+      </form>
+
+      <div class="text-center mt-3">
+        <a href="/auth/login" class="text-muted text-decoration-none" style="font-size:0.82rem;">
+          <i class="bi bi-arrow-left me-1"></i>¿Ya tienes cuenta? Inicia sesión
+        </a>
+      </div>
+
     </div>
   </div>
 </div>
+
+<script>
+  [['togglePwd1','eyeIcon1','password'],['togglePwd2','eyeIcon2','confirm_password']].forEach(([btnId, iconId, inputId]) => {
+    document.getElementById(btnId).addEventListener('click', () => {
+      const input = document.getElementById(inputId);
+      const icon = document.getElementById(iconId);
+      const isHidden = input.type === 'password';
+      input.type = isHidden ? 'text' : 'password';
+      icon.className = isHidden ? 'bi bi-eye-slash' : 'bi bi-eye';
+    });
+  });
+</script>
 
 <%- include('../layouts/auth_bottom') %>

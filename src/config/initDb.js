@@ -1,8 +1,17 @@
 const pool = require('./database');
 
+async function addColumnSafe(conn, table, column, definition) {
+  try {
+    await conn.query(`ALTER TABLE \`${table}\` ADD COLUMN \`${column}\` ${definition}`);
+  } catch (err) {
+    if (err.errno !== 1060) throw err; // 1060 = ER_DUP_FIELDNAME (column already exists)
+  }
+}
+
 async function initDb() {
   const conn = await pool.getConnection();
   try {
+    // ── Core Tables ──────────────────────────────────────────────────────────
     await conn.query(`
       CREATE TABLE IF NOT EXISTS users (
         id INT AUTO_INCREMENT PRIMARY KEY,
@@ -12,6 +21,27 @@ async function initDb() {
         rol ENUM('admin','docente','tecnico') DEFAULT 'docente',
         activo BOOLEAN DEFAULT TRUE,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+    `);
+
+    // ── Security Columns (idempotent migrations) ──────────────────────────────
+    await addColumnSafe(conn, 'users', 'login_attempts', 'INT NOT NULL DEFAULT 0');
+    await addColumnSafe(conn, 'users', 'locked_until', 'DATETIME NULL DEFAULT NULL');
+    await addColumnSafe(conn, 'users', 'last_login', 'DATETIME NULL DEFAULT NULL');
+    await addColumnSafe(conn, 'users', 'last_login_ip', 'VARCHAR(45) NULL DEFAULT NULL');
+
+    // ── Auth Audit Log ────────────────────────────────────────────────────────
+    await conn.query(`
+      CREATE TABLE IF NOT EXISTS auth_logs (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        user_id INT NULL,
+        event VARCHAR(50) NOT NULL,
+        ip_address VARCHAR(45),
+        detail VARCHAR(255) NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        INDEX idx_user (user_id),
+        INDEX idx_event (event),
+        INDEX idx_created (created_at)
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
     `);
 
@@ -83,7 +113,7 @@ async function initDb() {
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
     `);
 
-    // Seed only if empty
+    // ── Seed Data (only if fresh install) ────────────────────────────────────
     const [[{ count }]] = await conn.query('SELECT COUNT(*) as count FROM users');
     if (count === 0) {
       await conn.query(`
@@ -153,10 +183,10 @@ async function initDb() {
         (9,4,'Temperatura normalizada. Firmware actualizado. Incidencia resuelta.','resuelto',DATE_SUB(NOW(),INTERVAL 15 DAY))
       `);
 
-      console.log('✅ Base de datos inicializada con datos de ejemplo');
+      console.log('Base de datos inicializada con datos de ejemplo');
     }
 
-    console.log('✅ Tablas verificadas correctamente');
+    console.log('Tablas verificadas correctamente');
   } finally {
     conn.release();
   }

@@ -1,130 +1,402 @@
 <%- include('../layouts/auth_top') %>
 
-<div class="min-vh-100 d-flex align-items-center justify-content-center py-5">
-  <div class="w-100" style="max-width: 420px;">
-    <!-- Logo & Branding -->
-    <div class="text-center mb-4">
-      <div class="d-inline-flex align-items-center justify-content-center bg-white rounded-circle mb-3" style="width:80px;height:80px;box-shadow:0 4px 20px rgba(0,0,0,0.3)">
-        <i class="bi bi-display-fill text-uv" style="font-size:2rem;color:#006633;"></i>
-      </div>
-      <h1 class="text-white fw-bold mb-0">AulaCheck</h1>
-      <p class="text-white-50 mb-0">Universidad Veracruzana</p>
-    </div>
+<style>
+  html, body { height: 100%; margin: 0; background: #fff; }
 
-    <!-- Flash Messages -->
-    <% if (locals.success_msg && success_msg.length > 0) { %>
-      <div class="alert alert-success alert-dismissible fade show" role="alert">
-        <i class="bi bi-check-circle-fill me-2"></i><%= success_msg[0] %>
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-      </div>
-    <% } %>
-    <% if (locals.error_msg && error_msg.length > 0) { %>
-      <div class="alert alert-danger alert-dismissible fade show" role="alert">
-        <i class="bi bi-exclamation-triangle-fill me-2"></i><%= error_msg[0] %>
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-      </div>
-    <% } %>
-    <% if (locals.info_msg && info_msg.length > 0) { %>
-      <div class="alert alert-info alert-dismissible fade show" role="alert">
-        <i class="bi bi-info-circle-fill me-2"></i><%= info_msg[0] %>
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-      </div>
-    <% } %>
+  /* ── Split Panel ─────────────────────────────────── */
+  .auth-wrap { display: flex; min-height: 100vh; }
 
-    <!-- Login Card -->
-    <div class="card shadow-lg border-0 rounded-4">
-      <div class="card-body p-4">
-        <h4 class="card-title fw-bold mb-1">Iniciar Sesión</h4>
-        <p class="text-muted small mb-4">Ingresa tus credenciales institucionales</p>
+  .auth-left {
+    width: 55%;
+    background: linear-gradient(160deg, #002d16 0%, #004d26 35%, #006633 65%, #007a3d 100%);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 3rem 3.5rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .auth-left::before {
+    content: '';
+    position: absolute;
+    top: -120px; right: -120px;
+    width: 380px; height: 380px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.04);
+    pointer-events: none;
+  }
+  .auth-left::after {
+    content: '';
+    position: absolute;
+    bottom: -140px; left: -80px;
+    width: 460px; height: 460px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.03);
+    pointer-events: none;
+  }
+  .auth-left-inner { position: relative; z-index: 1; }
 
-        <form action="/auth/login" method="POST" novalidate id="loginForm">
-          <div class="mb-3">
-            <label for="email" class="form-label fw-semibold">Correo Electrónico</label>
-            <div class="input-group">
-              <span class="input-group-text"><i class="bi bi-envelope"></i></span>
-              <input type="email" class="form-control" id="email" name="email"
-                placeholder="correo@uv.mx" required autocomplete="email">
-            </div>
-          </div>
-          <div class="mb-3">
-            <label for="password" class="form-label fw-semibold">Contraseña</label>
-            <div class="input-group">
-              <span class="input-group-text"><i class="bi bi-lock"></i></span>
-              <input type="password" class="form-control" id="password" name="password"
-                placeholder="••••••••" required autocomplete="current-password">
-              <button class="btn btn-outline-secondary" type="button" id="togglePwd">
-                <i class="bi bi-eye" id="togglePwdIcon"></i>
-              </button>
-            </div>
-          </div>
+  .auth-right {
+    width: 45%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem 2.5rem;
+    background: #fff;
+  }
+  .auth-form-box { width: 100%; max-width: 400px; }
 
-          <div class="d-grid mt-4">
-            <button type="submit" class="btn btn-uv btn-lg fw-semibold">
-              <i class="bi bi-box-arrow-in-right me-2"></i>Iniciar Sesión
-            </button>
-          </div>
-        </form>
+  /* ── Feature List ────────────────────────────────── */
+  .feat-list { list-style: none; padding: 0; margin: 0; }
+  .feat-list li {
+    display: flex; align-items: center; gap: 12px;
+    padding: 7px 0;
+    color: rgba(255,255,255,0.82);
+    font-size: 0.93rem;
+  }
+  .feat-icon {
+    width: 22px; height: 22px; min-width: 22px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.12);
+    border: 1.5px solid rgba(255,255,255,0.25);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .feat-icon i { font-size: 0.65rem; color: rgba(255,255,255,0.9); }
+
+  /* ── Stats Row ───────────────────────────────────── */
+  .stat-pill { display: flex; flex-direction: column; }
+  .stat-pill .val { color: #fff; font-size: 1.4rem; font-weight: 700; line-height: 1; }
+  .stat-pill .lbl { color: rgba(255,255,255,0.45); font-size: 0.75rem; margin-top: 2px; }
+  .stat-divider { width: 1px; background: rgba(255,255,255,0.15); align-self: stretch; }
+
+  /* ── Form Inputs ─────────────────────────────────── */
+  .auth-label {
+    font-size: 0.72rem; font-weight: 700; letter-spacing: 0.06em;
+    text-transform: uppercase; color: #64748b; margin-bottom: 6px;
+  }
+  .auth-ig .input-group-text {
+    height: 46px;
+    border: 1.5px solid #e2e8f0; border-right: none;
+    border-radius: 10px 0 0 10px;
+    background: #f8fafc; color: #94a3b8;
+    transition: border-color 0.2s;
+  }
+  .auth-ig .form-control {
+    height: 46px;
+    border: 1.5px solid #e2e8f0; border-left: none;
+    border-radius: 0 10px 10px 0;
+    font-size: 0.95rem;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .auth-ig .form-control:focus {
+    border-color: #006633;
+    box-shadow: 0 0 0 3px rgba(0,102,51,0.1);
+  }
+  .auth-ig:focus-within .input-group-text { border-color: #006633; }
+  .auth-ig .btn-eye {
+    height: 46px;
+    border: 1.5px solid #e2e8f0; border-left: none;
+    border-radius: 0 10px 10px 0;
+    background: #f8fafc; color: #94a3b8;
+    transition: color 0.15s;
+  }
+  .auth-ig .btn-eye:hover { color: #006633; }
+  .auth-ig:focus-within .btn-eye { border-color: #006633; }
+
+  /* ── Submit Button ───────────────────────────────── */
+  .btn-signin {
+    height: 46px;
+    background: linear-gradient(135deg, #005229 0%, #008844 100%);
+    border: none; border-radius: 10px;
+    color: #fff; font-weight: 600; font-size: 0.97rem;
+    letter-spacing: 0.02em;
+    transition: all 0.2s;
+  }
+  .btn-signin:hover {
+    background: linear-gradient(135deg, #004d26 0%, #006633 100%);
+    color: #fff;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(0,102,51,0.28);
+  }
+  .btn-signin:active { transform: translateY(0); box-shadow: none; }
+  .btn-signin:disabled { opacity: 0.75; cursor: not-allowed; transform: none; }
+
+  /* ── Demo Credentials ────────────────────────────── */
+  .demo-box {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 14px;
+  }
+  .demo-pill {
+    display: flex; align-items: center; gap: 10px;
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 8px 12px;
+    cursor: pointer;
+    transition: all 0.15s;
+    text-align: left; width: 100%;
+    font-size: 0.83rem; color: #374151;
+  }
+  .demo-pill:hover {
+    border-color: #006633;
+    background: #f0fff5;
+    color: #003d1f;
+  }
+  .demo-pill .role { font-weight: 600; }
+  .demo-pill .mail { color: #94a3b8; font-size: 0.78rem; }
+
+  /* ── Divider ─────────────────────────────────────── */
+  .auth-divider {
+    display: flex; align-items: center; gap: 12px;
+    color: #cbd5e1; font-size: 0.78rem; margin: 1.25rem 0;
+  }
+  .auth-divider::before, .auth-divider::after {
+    content: ''; flex: 1; height: 1px; background: #e2e8f0;
+  }
+
+  /* ── Mobile ──────────────────────────────────────── */
+  @media (max-width: 991.98px) {
+    .auth-left { display: none !important; }
+    .auth-right {
+      width: 100%;
+      background: linear-gradient(160deg, #002d16, #006633);
+      align-items: flex-start;
+      padding: 2rem 1rem;
+      min-height: 100vh;
+    }
+    .auth-form-box {
+      max-width: 430px; margin: 1.5rem auto;
+      background: #fff; border-radius: 16px;
+      padding: 2rem 1.75rem;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+    }
+  }
+</style>
+
+<div class="auth-wrap">
+
+  <!-- ────────────────── Left Panel: Branding ────────────────── -->
+  <div class="auth-left d-none d-lg-flex flex-column auth-left-inner">
+
+    <!-- Brand -->
+    <div>
+      <div class="d-flex align-items-center gap-3 mb-5">
+        <div class="d-flex align-items-center justify-content-center rounded-3"
+             style="width:46px;height:46px;background:rgba(255,255,255,0.13);">
+          <i class="bi bi-display-fill text-white" style="font-size:1.25rem;"></i>
+        </div>
+        <div>
+          <div class="text-white fw-bold" style="font-size:1.25rem;line-height:1.1;">AulaCheck</div>
+          <div style="color:rgba(255,255,255,0.45);font-size:0.78rem;">Universidad Veracruzana</div>
+        </div>
       </div>
-    </div>
 
-    <!-- Demo credentials -->
-    <div class="card mt-3 border-0 rounded-4" style="background: rgba(255,255,255,0.1);">
-      <div class="card-body p-3">
-        <p class="text-white-75 small mb-2 fw-semibold"><i class="bi bi-info-circle me-1"></i>Credenciales de prueba:</p>
-        <div class="row g-1">
-          <div class="col-12">
-            <button class="btn btn-sm btn-outline-light w-100 text-start py-1 demo-login-btn"
-              data-email="admin@uv.mx" data-pass="Admin123!">
-              <i class="bi bi-shield-check text-warning me-2"></i>
-              <span class="small">Admin: admin@uv.mx / Admin123!</span>
-            </button>
-          </div>
-          <div class="col-12">
-            <button class="btn btn-sm btn-outline-light w-100 text-start py-1 demo-login-btn"
-              data-email="docente1@uv.mx" data-pass="Docente123!">
-              <i class="bi bi-person-badge text-info me-2"></i>
-              <span class="small">Docente: docente1@uv.mx / Docente123!</span>
-            </button>
-          </div>
-          <div class="col-12">
-            <button class="btn btn-sm btn-outline-light w-100 text-start py-1 demo-login-btn"
-              data-email="tecnico@uv.mx" data-pass="Tecnico123!">
-              <i class="bi bi-tools text-success me-2"></i>
-              <span class="small">Técnico: tecnico@uv.mx / Tecnico123!</span>
-            </button>
-          </div>
+      <h2 class="text-white fw-bold mb-2" style="font-size:1.75rem;line-height:1.25;max-width:360px;">
+        Gestión de Aulas Híbridas
+      </h2>
+      <p class="mb-5" style="color:rgba(255,255,255,0.6);font-size:0.95rem;max-width:340px;line-height:1.6;">
+        Plataforma centralizada para el diagnóstico y seguimiento de equipos audiovisuales en aulas de la UV.
+      </p>
+
+      <ul class="feat-list mb-5">
+        <li>
+          <div class="feat-icon"><i class="bi bi-check2"></i></div>
+          Diagnóstico guiado de equipos por aula
+        </li>
+        <li>
+          <div class="feat-icon"><i class="bi bi-check2"></i></div>
+          Registro y seguimiento de incidencias
+        </li>
+        <li>
+          <div class="feat-icon"><i class="bi bi-check2"></i></div>
+          Estadísticas y reportes en tiempo real
+        </li>
+        <li>
+          <div class="feat-icon"><i class="bi bi-check2"></i></div>
+          Control de acceso por roles
+        </li>
+        <li>
+          <div class="feat-icon"><i class="bi bi-check2"></i></div>
+          Historial completo de mantenimiento
+        </li>
+      </ul>
+
+      <!-- Stats -->
+      <div class="d-flex align-items-center gap-4">
+        <div class="stat-pill">
+          <span class="val">5+</span>
+          <span class="lbl">Aulas registradas</span>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat-pill">
+          <span class="val">3</span>
+          <span class="lbl">Roles de usuario</span>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat-pill">
+          <span class="val">24/7</span>
+          <span class="lbl">Disponibilidad</span>
         </div>
       </div>
     </div>
 
-    <div class="text-center mt-3">
-      <a href="/" class="text-white-50 small text-decoration-none">
-        <i class="bi bi-arrow-left me-1"></i>Volver al inicio
-      </a>
+    <!-- Footer -->
+    <div style="color:rgba(255,255,255,0.3);font-size:0.75rem;">
+      &copy; 2025 Universidad Veracruzana &middot; AulaCheck v2.0
+    </div>
+  </div>
+
+  <!-- ────────────────── Right Panel: Form ───────────────────── -->
+  <div class="auth-right">
+    <div class="auth-form-box">
+
+      <!-- Mobile logo (hidden on lg+) -->
+      <div class="d-lg-none text-center mb-4">
+        <div class="d-inline-flex align-items-center justify-content-center rounded-3 mb-3"
+             style="width:52px;height:52px;background:linear-gradient(135deg,#005229,#008844);">
+          <i class="bi bi-display-fill text-white" style="font-size:1.3rem;"></i>
+        </div>
+        <h1 class="fw-bold mb-0" style="font-size:1.5rem;color:#1a1a2e;">AulaCheck</h1>
+        <p class="text-muted small">Universidad Veracruzana</p>
+      </div>
+
+      <!-- Heading -->
+      <div class="mb-4">
+        <h2 class="fw-bold mb-1" style="font-size:1.5rem;color:#1a1a2e;">Iniciar Sesión</h2>
+        <p class="text-muted mb-0" style="font-size:0.88rem;">
+          Ingresa tus credenciales institucionales para continuar.
+        </p>
+      </div>
+
+      <!-- Flash Messages -->
+      <% if (locals.success_msg && success_msg.length > 0) { %>
+        <div class="alert d-flex align-items-start gap-2 py-2 mb-4 border-0"
+             style="background:#ecfdf5;color:#065f46;border-radius:10px;" role="alert">
+          <i class="bi bi-check-circle-fill mt-1 flex-shrink-0"></i>
+          <span style="font-size:0.88rem;"><%= success_msg[0] %></span>
+        </div>
+      <% } %>
+      <% if (locals.error_msg && error_msg.length > 0) { %>
+        <div class="alert d-flex align-items-start gap-2 py-2 mb-4 border-0"
+             style="background:#fef2f2;color:#991b1b;border-radius:10px;" role="alert">
+          <i class="bi bi-exclamation-triangle-fill mt-1 flex-shrink-0"></i>
+          <span style="font-size:0.88rem;"><%= error_msg[0] %></span>
+        </div>
+      <% } %>
+      <% if (locals.info_msg && info_msg.length > 0) { %>
+        <div class="alert d-flex align-items-start gap-2 py-2 mb-4 border-0"
+             style="background:#eff6ff;color:#1e40af;border-radius:10px;" role="alert">
+          <i class="bi bi-info-circle-fill mt-1 flex-shrink-0"></i>
+          <span style="font-size:0.88rem;"><%= info_msg[0] %></span>
+        </div>
+      <% } %>
+
+      <!-- Form -->
+      <form action="/auth/login" method="POST" id="loginForm" novalidate>
+
+        <div class="mb-3">
+          <div class="auth-label">Correo Electrónico</div>
+          <div class="input-group auth-ig">
+            <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+            <input type="email" class="form-control" id="email" name="email"
+              placeholder="correo@uv.mx" required autocomplete="email" spellcheck="false">
+          </div>
+        </div>
+
+        <div class="mb-4">
+          <div class="auth-label">Contraseña</div>
+          <div class="input-group auth-ig">
+            <span class="input-group-text"><i class="bi bi-lock"></i></span>
+            <input type="password" class="form-control" id="password" name="password"
+              placeholder="••••••••" required autocomplete="current-password">
+            <button class="btn btn-eye" type="button" id="togglePwd" tabindex="-1">
+              <i class="bi bi-eye" id="eyeIcon"></i>
+            </button>
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-signin w-100 mb-1" id="submitBtn">
+          <span id="btnLabel">
+            <i class="bi bi-box-arrow-in-right me-2"></i>Iniciar Sesión
+          </span>
+          <span id="btnLoading" class="d-none">
+            <span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>
+            Verificando...
+          </span>
+        </button>
+
+      </form>
+
+      <!-- Divider -->
+      <div class="auth-divider">acceso demo</div>
+
+      <!-- Demo Credentials -->
+      <div class="demo-box">
+        <p class="text-muted mb-2" style="font-size:0.78rem;font-weight:600;">
+          Haz clic para autocompletar:
+        </p>
+        <div class="d-flex flex-column gap-2">
+          <button class="demo-pill" data-email="admin@uv.mx" data-pass="Admin123!" type="button">
+            <i class="bi bi-shield-check" style="color:#dc2626;font-size:1rem;"></i>
+            <div>
+              <div class="role">Administrador</div>
+              <div class="mail">admin@uv.mx</div>
+            </div>
+          </button>
+          <button class="demo-pill" data-email="docente1@uv.mx" data-pass="Docente123!" type="button">
+            <i class="bi bi-person-badge" style="color:#2563eb;font-size:1rem;"></i>
+            <div>
+              <div class="role">Docente</div>
+              <div class="mail">docente1@uv.mx</div>
+            </div>
+          </button>
+          <button class="demo-pill" data-email="tecnico@uv.mx" data-pass="Tecnico123!" type="button">
+            <i class="bi bi-tools" style="color:#16a34a;font-size:1rem;"></i>
+            <div>
+              <div class="role">Técnico</div>
+              <div class="mail">tecnico@uv.mx</div>
+            </div>
+          </button>
+        </div>
+      </div>
+
+      <div class="text-center mt-4">
+        <a href="/" class="text-muted text-decoration-none" style="font-size:0.82rem;">
+          <i class="bi bi-arrow-left me-1"></i>Volver al inicio
+        </a>
+      </div>
+
     </div>
   </div>
 </div>
 
 <script>
   // Toggle password visibility
-  document.getElementById('togglePwd').addEventListener('click', function() {
+  document.getElementById('togglePwd').addEventListener('click', () => {
     const pwd = document.getElementById('password');
-    const icon = document.getElementById('togglePwdIcon');
-    if (pwd.type === 'password') {
-      pwd.type = 'text';
-      icon.className = 'bi bi-eye-slash';
-    } else {
-      pwd.type = 'password';
-      icon.className = 'bi bi-eye';
-    }
+    const icon = document.getElementById('eyeIcon');
+    const isHidden = pwd.type === 'password';
+    pwd.type = isHidden ? 'text' : 'password';
+    icon.className = isHidden ? 'bi bi-eye-slash' : 'bi bi-eye';
   });
 
-  // Demo login buttons
-  document.querySelectorAll('.demo-login-btn').forEach(btn => {
-    btn.addEventListener('click', function() {
+  // Demo credential quick-fill
+  document.querySelectorAll('.demo-pill').forEach(btn => {
+    btn.addEventListener('click', function () {
       document.getElementById('email').value = this.dataset.email;
       document.getElementById('password').value = this.dataset.pass;
+      document.getElementById('email').focus();
     });
+  });
+
+  // Loading state on submit
+  document.getElementById('loginForm').addEventListener('submit', () => {
+    const btn = document.getElementById('submitBtn');
+    document.getElementById('btnLabel').classList.add('d-none');
+    document.getElementById('btnLoading').classList.remove('d-none');
+    btn.disabled = true;
   });
 </script>
 

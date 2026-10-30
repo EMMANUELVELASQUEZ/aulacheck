@@ -1,5 +1,7 @@
 require('dotenv').config();
 const express = require('express');
+const helmet = require('helmet');
+const morgan = require('morgan');
 const session = require('express-session');
 const flash = require('connect-flash');
 const methodOverride = require('method-override');
@@ -9,42 +11,75 @@ const pool = require('./src/config/database');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// ─── View Engine ─────────────────────────────────────────────────────────────
+// ── Trust Proxy (Railway / Render / Heroku) ───────────────────────────────────
+app.set('trust proxy', 1);
+
+// ── Security Headers ──────────────────────────────────────────────────────────
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        styleSrc: ["'self'", "'unsafe-inline'", 'https://cdn.jsdelivr.net'],
+        scriptSrc: ["'self'", "'unsafe-inline'", 'https://cdn.jsdelivr.net', 'https://cdn.jsdelivr.net'],
+        fontSrc: ["'self'", 'https://cdn.jsdelivr.net'],
+        imgSrc: ["'self'", 'data:', 'https:'],
+        connectSrc: ["'self'"],
+      },
+    },
+    crossOriginEmbedderPolicy: false,
+  })
+);
+
+// ── HTTP Request Logging ──────────────────────────────────────────────────────
+if (process.env.NODE_ENV !== 'test') {
+  app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
+}
+
+// ── View Engine ───────────────────────────────────────────────────────────────
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'src/views'));
 
-// ─── Static Files ─────────────────────────────────────────────────────────────
+// ── Static Files ──────────────────────────────────────────────────────────────
 app.use(express.static(path.join(__dirname, 'public')));
 
-// ─── Body Parsing ─────────────────────────────────────────────────────────────
+// ── Body Parsing ──────────────────────────────────────────────────────────────
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
-// ─── Method Override (PUT/DELETE from forms) ──────────────────────────────────
+// ── Method Override (PUT/DELETE from forms) ───────────────────────────────────
 app.use(methodOverride('_method'));
 
-// ─── Session ──────────────────────────────────────────────────────────────────
-app.use(session({
-  secret: process.env.SESSION_SECRET || 'aulacheck_secret_key_change_in_production',
-  resave: false,
-  saveUninitialized: false,
-  cookie: {
-    secure: process.env.NODE_ENV === 'production',
-    maxAge: 1000 * 60 * 60 * 8 // 8 hours
-  }
-}));
+// ── Session ───────────────────────────────────────────────────────────────────
+app.use(
+  session({
+    secret: process.env.SESSION_SECRET || 'ac_dev_secret_change_in_production',
+    resave: false,
+    saveUninitialized: false,
+    name: 'ac.sid',
+    cookie: {
+      secure: process.env.NODE_ENV === 'production',
+      httpOnly: true,
+      maxAge: 1000 * 60 * 60 * 8, // 8 hours
+      sameSite: 'lax',
+    },
+  })
+);
 
-// ─── Flash Messages ───────────────────────────────────────────────────────────
+// ── Flash Messages ────────────────────────────────────────────────────────────
 app.use(flash());
 
-// ─── Global Middleware (setLocals) ────────────────────────────────────────────
+// ── Global View Locals ────────────────────────────────────────────────────────
 const { setLocals } = require('./src/middlewares/auth');
 app.use(setLocals);
 
-// ─── API Routes (before main routes) ─────────────────────────────────────────
+// ── Global Rate Limiter ───────────────────────────────────────────────────────
+const { globalLimiter } = require('./src/middlewares/rateLimiter');
+app.use(globalLimiter);
+
+// ── API Routes ────────────────────────────────────────────────────────────────
 const { isAuthenticated } = require('./src/middlewares/auth');
 
-// API: Get equipos by aula (AJAX)
 app.get('/api/equipos/:aulaId', isAuthenticated, async (req, res) => {
   try {
     const [equipos] = await pool.query(
@@ -52,17 +87,15 @@ app.get('/api/equipos/:aulaId', isAuthenticated, async (req, res) => {
       [req.params.aulaId]
     );
     res.json(equipos);
-  } catch (err) {
-    console.error('Error en API equipos:', err);
+  } catch {
     res.status(500).json({ error: 'Error al obtener equipos' });
   }
 });
 
-// API: Stats for charts (AJAX)
 const estadisticasController = require('./src/controllers/estadisticasController');
 app.get('/api/stats', isAuthenticated, estadisticasController.apiStats);
 
-// ─── Routes ───────────────────────────────────────────────────────────────────
+// ── Routes ────────────────────────────────────────────────────────────────────
 app.use('/', require('./src/routes/index'));
 app.use('/auth', require('./src/routes/auth'));
 app.use('/dashboard', require('./src/routes/dashboard'));
@@ -71,49 +104,41 @@ app.use('/incidencias', require('./src/routes/incidencias'));
 app.use('/admin', require('./src/routes/admin'));
 app.use('/estadisticas', require('./src/routes/estadisticas'));
 
-// ─── 404 Handler ─────────────────────────────────────────────────────────────
+// ── 404 Handler ───────────────────────────────────────────────────────────────
 app.use((req, res) => {
-  res.status(404).render('404', {
-    title: 'Página no encontrada - AulaCheck',
-    layout: 'main'
-  });
+  res.status(404).render('404', { title: 'Página no encontrada - AulaCheck', layout: 'main' });
 });
 
-// ─── Error Handler ────────────────────────────────────────────────────────────
+// ── Error Handler ─────────────────────────────────────────────────────────────
 app.use((err, req, res, next) => {
-  console.error('Error no controlado:', err.stack);
+  console.error('Unhandled error:', err.stack);
   res.status(500).render('error', {
     title: 'Error del servidor - AulaCheck',
     layout: 'main',
-    message: process.env.NODE_ENV === 'development' ? err.message : 'Error interno del servidor'
+    message: process.env.NODE_ENV === 'development' ? err.message : 'Error interno del servidor',
   });
 });
 
-// ─── Start Server ─────────────────────────────────────────────────────────────
+// ── Start Server ──────────────────────────────────────────────────────────────
 const initDb = require('./src/config/initDb');
 
-// Levanta el servidor inmediatamente para que Railway detecte el puerto
 app.listen(PORT, () => {
-  console.log(`🚀 AulaCheck corriendo en http://localhost:${PORT}`);
-  console.log(`📚 Universidad Veracruzana - Sistema de Aulas Híbridas`);
-  console.log(`🌍 Entorno: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`AulaCheck v2.0 corriendo en http://localhost:${PORT}`);
+  console.log(`Entorno: ${process.env.NODE_ENV || 'development'}`);
 });
 
-// Inicializa la base de datos con reintentos en background
 async function initWithRetry(attempts = 10, delay = 5000) {
   for (let i = 1; i <= attempts; i++) {
     try {
       await initDb();
-      console.log('✅ Base de datos lista');
       return;
     } catch (err) {
-      console.error(`⚠️  DB intento ${i}/${attempts}: ${err.message}`);
-      if (i < attempts) await new Promise(r => setTimeout(r, delay));
+      console.error(`DB intento ${i}/${attempts}: ${err.message}`);
+      if (i < attempts) await new Promise((r) => setTimeout(r, delay));
     }
   }
-  console.error('❌ No se pudo conectar a la base de datos después de varios intentos');
+  console.error('No se pudo inicializar la base de datos después de varios intentos.');
 }
 
 initWithRetry();
-
 module.exports = app;
